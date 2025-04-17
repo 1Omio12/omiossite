@@ -111,6 +111,25 @@
       vertical-align: middle;
     }
 
+    .legend button {
+      display: block;
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+      font-size: 0.9em;
+      background-color: #0077cc;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color 0.3s;
+    }
+
+    .legend button:hover {
+      background-color: #005fa3;
+    }
+
     #detector-container {
       margin: 100px auto;
       width: 300px;
@@ -165,7 +184,7 @@
 </head>
 <body>
   <img src="Military_Institute_of_Science_and_Technology_Monogram.svg.png" alt="MIST Logo" style="position: absolute; top: 30px; left: 30px; height: 70px; z-index: 1000; border-radius: 8px;" />
-  <h1>||OMIO'S RADIATION DETECTOR||</h1>
+  <h1>||OMIO'S RADIATION DATA||</h1>
 
   <div id="detector-container">
     <svg id="detector-svg" viewBox="0 0 150 300">
@@ -217,6 +236,7 @@
     }).addTo(map);
 
     const markers = L.layerGroup().addTo(map);
+    let latestValidFeed = null; // Store latest valid feed details
 
     const legend = L.control({position: 'bottomright'});
     legend.onAdd = function () {
@@ -225,6 +245,30 @@
       div.innerHTML += '<i style="background:orange"></i> 0.1 to less than 0.5 µSv/h<br>';
       div.innerHTML += '<i style="background:red"></i> 0.5 µSv/h and above<br>';
       div.innerHTML += '<img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" /> Latest Location<br>';
+      div.innerHTML += '<button id="show-latest-location">Show Latest Location</button>';
+      L.DomEvent.on(div.querySelector('#show-latest-location'), 'click', function () {
+        if (latestValidFeed) {
+          const lat = parseFloat(latestValidFeed.field4);
+          const lon = parseFloat(latestValidFeed.field5);
+          const val = parseFloat(latestValidFeed.field3);
+          const time = latestValidFeed.created_at;
+
+          const customIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+          });
+
+          L.marker([lat, lon], { icon: customIcon })
+            .addTo(markers)
+            .bindPopup(`Latest Location<br>Radiation: ${val} µSv/h<br>Time: ${time}`);
+
+          map.panTo([lat, lon], { animate: true, duration: 1 });
+        } else {
+          alert('No valid latest location available.');
+        }
+      });
       return div;
     };
     legend.addTo(map);
@@ -286,7 +330,7 @@
           const times = [];
           const values = [];
           let sumLat = 0, sumLon = 0, count = 0;
-          let latestValidFeed = null;
+          latestValidFeed = null; // Reset latest valid feed
 
           data.feeds.forEach(feed => {
             const lat = parseFloat(feed.field4);
@@ -319,25 +363,6 @@
               }
             }
           });
-
-          // Add a custom icon marker for the latest valid location
-          if (latestValidFeed) {
-            const lat = parseFloat(latestValidFeed.field4);
-            const lon = parseFloat(latestValidFeed.field5);
-            const val = parseFloat(latestValidFeed.field3);
-            const time = latestValidFeed.created_at;
-
-            const customIcon = L.icon({
-              iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34]
-            });
-
-            L.marker([lat, lon], { icon: customIcon })
-              .addTo(markers)
-              .bindPopup(`Latest Location<br>Radiation: ${val} µSv/h<br>Time: ${time}`);
-          }
 
           const latest = data.feeds[data.feeds.length - 1];
           const latestVal = parseFloat(latest?.field3);
