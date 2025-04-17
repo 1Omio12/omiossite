@@ -5,146 +5,129 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ORadiation Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #ffffff;
-      color: #333;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      color: #1f2937;
       margin: 0;
-      padding: 20px;
-      text-align: center;
+      padding: 40px;
+      min-height: 100vh;
     }
 
     h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-      color: #0077cc;
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #3b82f6, #1d4ed8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
     }
 
     h2 {
-      font-size: 1.6em;
-      color: #444;
-      margin-bottom: 20px;
+      font-size: 1.875rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1.5rem;
     }
 
     .controls {
-      margin-bottom: 20px;
       display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
     }
 
     .controls label {
-      font-size: 1.1em;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: #374151;
     }
 
     .controls input {
-      padding: 10px;
-      font-size: 1em;
-      width: 100px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      width: 120px;
+      transition: border-color 0.3s ease;
     }
 
-    .controls button {
-      padding: 10px 20px;
-      font-size: 1em;
-      background-color: #0077cc;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .controls button:hover {
-      background-color: #005fa3;
+    .controls input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     #chart-container {
-      width: 100%;
-      max-width: 1000px;
-      margin: 0 auto 30px;
-      background: #f9f9f9;
-      padding: 20px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
     }
 
     #map {
       height: 600px;
-      width: 100%;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      border: 1px solid #ccc;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
     }
 
     .info {
-      font-size: 0.9em;
-      color: #666;
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-align: center;
     }
 
     .legend {
-      background: white;
-      padding: 12px;
-      border-radius: 5px;
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
-      line-height: 1.5;
-      font-size: 0.9em;
-      color: #333;
-      width: 200px;
+      background: #ffffff;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+      font-size: 0.875rem;
+      color: #374151;
+      width: 220px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 0.75rem;
     }
 
     .legend i {
       width: 16px;
       height: 16px;
-      margin-right: 8px;
+      margin-right: 0.5rem;
       flex-shrink: 0;
     }
 
     .legend img {
       width: 16px;
       height: 16px;
-      margin-right: 8px;
+      margin-right: 0.5rem;
       vertical-align: middle;
-      flex-shrink: 0;
-    }
-
-    .legend button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 10px;
-      font-size: 0.9em;
-      background-color: #0077cc;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      text-align: center;
-      transition: background-color 0.3s;
-    }
-
-    .legend button:hover {
-      background-color: #005fa3;
     }
 
     #detector-container {
-      margin: 100px auto;
+      margin: 2rem auto;
       width: 300px;
       height: 600px;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: #ffffff;
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
     }
 
     #detector-svg {
@@ -153,90 +136,92 @@
     }
 
     .detector-body {
-      fill: #f7f9fb;
-      stroke: #000;
+      fill: #e5e7eb;
+      stroke: #374151;
       stroke-width: 2;
     }
 
     .detector-antenna {
-      fill: #000;
-      stroke: #000;
+      fill: #1f2937;
+      stroke: #1f2937;
       stroke-width: 2;
     }
 
     .detector-screen {
-      fill: #d6fded;
-      stroke: #000;
+      fill: #d1fae5;
+      stroke: #374151;
       stroke-width: 1;
       filter: url(#glow);
     }
 
     .detector-button {
-      fill: #0077cc;
-      stroke: #000;
+      fill: #3b82f6;
+      stroke: #1f2937;
       stroke-width: 2;
     }
 
     .detector-text {
       font-family: 'Courier New', Courier, monospace;
       font-size: 12px;
-      fill: #000;
+      fill: #1f2937;
       text-anchor: middle;
       dominant-baseline: middle;
     }
 
     .detector-light {
       fill: red;
+      transition: fill 0.3s ease;
     }
   </style>
 </head>
 <body>
-  <img src="Military_Institute_of_Science_and_Technology_Monogram.svg.png" alt="MIST Logo" style="position: absolute; top: 30px; left: 30px; height: 70px; z-index: 1000; border-radius: 8px;" />
-  <h1>||OMIO'S RADIATION DATA||</h1>
+  <img src="Military_Institute_of_Science_and_Technology_Monogram.svg.png" alt="MIST Logo" class="absolute top-8 left-8 h-16 z-[1000] rounded-lg shadow-md" />
+  <div class="container mx-auto">
+    <h1 class="text-center">||OMIO'S RADIATION DATA||</h1>
 
-  <div id="detector-container">
-    <svg id="detector-svg" viewBox="0 0 150 300">
-      <defs>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
-          <feFlood flood-color="#00ff00" flood-opacity="0.3"/>
-          <feComposite in2="blur" operator="in"/>
-          <feMerge>
-            <feMergeNode/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      <rect x="65" y="10" width="20" height="20" class="detector-antenna"/>
-      <line x1="75" y1="10" x2="75" y2="5" class="detector-antenna"/>
-      <rect x="30" y="30" width="90" height="120" rx="10" class="detector-body"/>
-      <text x="75" y="165" class="detector-text" style="font-size: 14px;">DETECTOR</text>
-      <rect x="35" y="40" width="80" height="50" rx="5" class="detector-screen"/>
-      <text x="75" y="65" class="detector-text" id="detector-display">N/A µSv/h</text>
-      <image x="58" y="110" width="35" height="35" href="trifoil1.jpg" />
-      <circle cx="75" cy="100" r="2" class="detector-light" id="detector-light"/>
-    </svg>
+    <div id="detector-container">
+      <svg id="detector-svg" viewBox="0 0 150 300">
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+            <feFlood flood-color="#10b981" flood-opacity="0.3"/>
+            <feComposite in2="blur" operator="in"/>
+            <feMerge>
+              <feMergeNode/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <rect x="65" y="10" width="20" height="20" class="detector-antenna"/>
+        <line x1="75" y1="10" x2="75" y2="5" class="detector-antenna"/>
+        <rect x="30" y="30" width="90" height="120" rx="10" class="detector-body"/>
+        <text x="75" y="165" class="detector-text" style="font-size: 14px;">DETECTOR</text>
+        <rect x="35" y="40" width="80" height="50" rx="5" class="detector-screen"/>
+        <text x="75" y="65" class="detector-text" id="detector-display">N/A µSv/h</text>
+        <image x="58" y="110" width="35" height="35" href="trifoil1.jpg" />
+        <circle cx="75" cy="100" r="2" class="detector-light" id="detector-light"/>
+      </svg>
+    </div>
+
+    <div class="controls">
+      <label for="points" class="font-medium">NUMBER OF DATA:</label>
+      <input type="number" id="points" min="1" max="8000" value="8000" class="focus:ring focus:ring-blue-200"/>
+      <button onclick="updateMap()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out">UPDATE</button>
+    </div>
+
+    <div id="chart-container">
+      <canvas id="radiationChart"></canvas>
+    </div>
+
+    <h2 class="text-center">Radiation Mapping</h2>
+    <div id="map"></div>
+    <p class="info">Map updates automatically every 5 seconds. Max 8000 points.</p>
   </div>
-
-  <div class="controls">
-    <label for="points">NUMBER OF DATA:</label>
-    <input type="number" id="points" min="1" max="8000" value="8000" />
-    <button onclick="updateMap()">UPDATE</button>
-  </div>
-
-  <div id="chart-container">
-    <canvas id="radiationChart"></canvas>
-  </div>
-
-  <h2>Radiation Mapping</h2>
-  <div id="map"></div>
-  <p class="info">Map updates automatically every 5 seconds. Max 8000 points.</p>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
-
   <script>
     const map = L.map('map').setView([23.685, 90.3563], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -245,29 +230,29 @@
 
     const markers = L.layerGroup().addTo(map);
     let latestValidFeed = null;
-    let isInitialLoad = true; // Flag for initial load
+    let isInitialLoad = true;
 
     const legend = L.control({position: 'bottomright'});
     legend.onAdd = function () {
       const div = L.DomUtil.create('div', 'info legend');
       div.innerHTML = `
         <div class="legend-item">
-          <i style="background:green"></i>
+          <i style="background:#10b981"></i>
           <span>Less than 0.1 µSv/h</span>
         </div>
         <div class="legend-item">
-          <i style="background:orange"></i>
+          <i style="background:#f59e0b"></i>
           <span>0.1 to less than 0.5 µSv/h</span>
         </div>
         <div class="legend-item">
-          <i style="background:red"></i>
+          <i style="background:#ef4444"></i>
           <span>0.5 µSv/h and above</span>
         </div>
         <div class="legend-item">
           <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
           <span>Latest Location</span>
         </div>
-        <button id="show-latest-location">Show Latest Location</button>
+        <button id="show-latest-location" class="bg-blue-600 text-white w-full py-2 mt-3 rounded-lg hover:bg-blue-700 transition duration-300">Show Latest Location</button>
       `;
       L.DomEvent.on(div.querySelector('#show-latest-location'), 'click', function () {
         if (latestValidFeed) {
@@ -304,8 +289,8 @@
         datasets: [{
           label: 'Radiation Level (µSv/h)',
           data: [],
-          borderColor: '#0077cc',
-          backgroundColor: 'rgba(0, 119, 204, 0.2)',
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
           fill: true,
           tension: 0.3
         }]
@@ -316,30 +301,30 @@
           title: {
             display: true,
             text: 'Radiation Level Over Time',
-            font: { size: 20 },
+            font: { size: 20, family: 'Inter' },
             padding: { top: 10, bottom: 20 }
           }
         },
         scales: {
           x: {
             type: 'time',
-            title: { display: true, text: 'Time' }
+            title: { display: true, text: 'Time', font: { family: 'Inter' } }
           },
           y: {
-            title: { display: true, text: 'Radiation Level (µSv/h)' }
+            title: { display: true, text: 'Radiation Level (µSv/h)', font: { family: 'Inter' } }
           }
         }
       }
     });
 
     function getColor(value) {
-      if (value < 0.1) return 'green';
-      if (value < 0.5) return 'orange';
-      return 'red';
+      if (value < 0.1) return '#10b981';
+      if (value < 0.5) return '#f59e0b';
+      return '#ef4444';
     }
 
     function fetchData(limit, resetView = false) {
-      document.getElementById('detector-light').setAttribute('fill', 'red');
+      document.getElementById('detector-light').setAttribute('fill', '#ef4444');
 
       const channelId = '2849195';
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
@@ -370,7 +355,7 @@
               L.circleMarker([lat, lon], {
                 radius: 6,
                 fillColor: getColor(val),
-                color: '#000',
+                color: '#1f2937',
                 weight: 1,
                 opacity: 1,
                 fillOpacity: 0.8
@@ -394,15 +379,14 @@
           radiationChart.data.datasets[0].data = values;
           radiationChart.update();
 
-          // Only reset the map view on initial load or when explicitly requested
           if ((isInitialLoad || resetView) && count > 0) {
             map.setView([sumLat / count, sumLon / count], 13);
-            isInitialLoad = false; // Disable initial load flag after first run
+            isInitialLoad = false;
           }
         })
         .catch(console.error)
         .finally(() => {
-          document.getElementById('detector-light').setAttribute('fill', 'blue');
+          document.getElementById('detector-light').setAttribute('fill', '#3b82f6');
         });
     }
 
@@ -412,11 +396,11 @@
         alert('Please enter a number between 1 and 8000.');
         return;
       }
-      fetchData(val, true); // Pass resetView=true to reset view on manual update
+      fetchData(val, true);
     }
 
-    fetchData(8000, true); // Initial load with view reset
-    setInterval(() => fetchData(document.getElementById('points').value, false), 5000); // Periodic update without view reset
+    fetchData(8000, true);
+    setInterval(() => fetchData(document.getElementById('points').value, false), 5000);
   </script>
 </body>
 </html>
