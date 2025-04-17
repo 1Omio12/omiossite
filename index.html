@@ -90,39 +90,47 @@
 
     .legend {
       background: white;
-      padding: 10px;
+      padding: 12px;
       border-radius: 5px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.2);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+      line-height: 1.5;
+      font-size: 0.9em;
+      color: #333;
+      width: 200px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
     }
 
     .legend i {
-      width: 18px;
-      height: 18px;
-      float: left;
+      width: 16px;
+      height: 16px;
       margin-right: 8px;
-      opacity: 0.7;
+      flex-shrink: 0;
     }
 
     .legend img {
-      width: 18px;
-      height: 18px;
-      float: left;
+      width: 16px;
+      height: 16px;
       margin-right: 8px;
       vertical-align: middle;
+      flex-shrink: 0;
     }
 
     .legend button {
-      display: block;
       width: 100%;
-      padding: 5px;
-      margin-top: 5px;
+      padding: 8px;
+      margin-top: 10px;
       font-size: 0.9em;
       background-color: #0077cc;
       color: #fff;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      text-align: left;
+      text-align: center;
       transition: background-color 0.3s;
     }
 
@@ -236,16 +244,30 @@
     }).addTo(map);
 
     const markers = L.layerGroup().addTo(map);
-    let latestValidFeed = null; // Store latest valid feed details
+    let latestValidFeed = null;
 
     const legend = L.control({position: 'bottomright'});
     legend.onAdd = function () {
       const div = L.DomUtil.create('div', 'info legend');
-      div.innerHTML += '<i style="background:green"></i> Less than 0.1 µSv/h<br>';
-      div.innerHTML += '<i style="background:orange"></i> 0.1 to less than 0.5 µSv/h<br>';
-      div.innerHTML += '<i style="background:red"></i> 0.5 µSv/h and above<br>';
-      div.innerHTML += '<img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" /> Latest Location<br>';
-      div.innerHTML += '<button id="show-latest-location">Show Latest Location</button>';
+      div.innerHTML = `
+        <div class="legend-item">
+          <i style="background:green"></i>
+          <span>Less than 0.1 µSv/h</span>
+        </div>
+        <div class="legend-item">
+          <i style="background:orange"></i>
+          <span>0.1 to less than 0.5 µSv/h</span>
+        </div>
+        <div class="legend-item">
+          <i style="background:red"></i>
+          <span>0.5 µSv/h and above</span>
+        </div>
+        <div class="legend-item">
+          <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
+          <span>Latest Location</span>
+        </div>
+        <button id="show-latest-location">Show Latest Location</button>
+      `;
       L.DomEvent.on(div.querySelector('#show-latest-location'), 'click', function () {
         if (latestValidFeed) {
           const lat = parseFloat(latestValidFeed.field4);
@@ -330,7 +352,7 @@
           const times = [];
           const values = [];
           let sumLat = 0, sumLon = 0, count = 0;
-          latestValidFeed = null; // Reset latest valid feed
+          latestValidFeed = null;
 
           data.feeds.forEach(feed => {
             const lat = parseFloat(feed.field4);
@@ -357,7 +379,6 @@
               sumLon += lon;
               count++;
 
-              // Track the latest valid feed
               if (!isNaN(val)) {
                 latestValidFeed = feed;
               }
