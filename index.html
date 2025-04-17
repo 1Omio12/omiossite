@@ -64,8 +64,8 @@
     }
 
     #chart-container {
-      width: 95%;
-      max-width: 1200px;
+      width: 100%;
+      max-width: 1000px;
       margin: 0 auto 30px;
       background: #f9f9f9;
       padding: 20px;
@@ -88,27 +88,11 @@
       color: #666;
     }
 
-    #latest-radiation {
-      font-size: 1.5em;
-      margin: 20px auto;
-      padding: 15px;
-      background: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      width: fit-content;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    #latest-value {
-      font-weight: bold;
-      color: #0077cc;
-    }
-
     .legend {
       background: white;
       padding: 10px;
       border-radius: 5px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      box-shadow: 0 0 25px rgba(0,0,0,0.2);
     }
 
     .legend i {
@@ -118,12 +102,87 @@
       margin-right: 8px;
       opacity: 0.7;
     }
+
+    #detector-container {
+      margin: 100px auto;
+      width: 300px;
+      height: 600px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #detector-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .detector-body {
+      fill: #f7f9fb;
+      stroke: #000;
+      stroke-width: 2;
+    }
+
+    .detector-antenna {
+      fill: #000;
+      stroke: #000;
+      stroke-width: 2;
+    }
+
+    .detector-screen {
+      fill: #d6fded;
+      stroke: #000;
+      stroke-width: 1;
+      filter: url(#glow);
+    }
+
+    .detector-button {
+      fill: #0077cc;
+      stroke: #000;
+      stroke-width: 2;
+    }
+
+    .detector-text {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      fill: #000;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .detector-light {
+      fill: red;
+    }
   </style>
 </head>
 <body>
   <img src="Military_Institute_of_Science_and_Technology_Monogram.svg.png" alt="MIST Logo" style="position: absolute; top: 30px; left: 30px; height: 70px; z-index: 1000; border-radius: 8px;" />
-  <h1>||OMIO'S RADIATION WEBSITE||</h1>
-  <div id="latest-radiation">LATEST RADIATION LEVEL: <span id="latest-value">N/A</span> µSv/h</div>
+  <h1>||OMIO'S RADIATION DETECTOR||</h1>
+
+  <div id="detector-container">
+    <svg id="detector-svg" viewBox="0 0 150 300">
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+          <feFlood flood-color="#00ff00" flood-opacity="0.3"/>
+          <feComposite in2="blur" operator="in"/>
+          <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <rect x="65" y="10" width="20" height="20" class="detector-antenna"/>
+      <line x1="75" y1="10" x2="75" y2="5" class="detector-antenna"/>
+      <rect x="30" y="30" width="90" height="120" rx="10" class="detector-body"/>
+      <text x="75" y="165" class="detector-text" style="font-size: 14px;">DETECTOR</text>
+      <rect x="35" y="40" width="80" height="50" rx="5" class="detector-screen"/>
+      <text x="75" y="65" class="detector-text" id="detector-display">N/A µSv/h</text>
+      <image x="58" y="110" width="35" height="35" href="trifoil1.jpg" />
+
+      <circle cx="75" cy="100" r="2" class="detector-light" id="detector-light"/>
+    </svg>
+  </div>
 
   <div class="controls">
     <label for="points">NUMBER OF DATA:</label>
@@ -145,16 +204,16 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
 
   <script>
-    var map = L.map('map').setView([23.685, 90.3563], 7); // Centered on Bangladesh
+    const map = L.map('map').setView([23.685, 90.3563], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    var markers = L.layerGroup().addTo(map);
+    const markers = L.layerGroup().addTo(map);
 
-    var legend = L.control({position: 'bottomright'});
-    legend.onAdd = function (map) {
-      var div = L.DomUtil.create('div', 'info legend');
+    const legend = L.control({position: 'bottomright'});
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'info legend');
       div.innerHTML += '<i style="background:green"></i> Less than 0.1 µSv/h<br>';
       div.innerHTML += '<i style="background:orange"></i> 0.1 to less than 0.5 µSv/h<br>';
       div.innerHTML += '<i style="background:red"></i> 0.5 µSv/h and above<br>';
@@ -162,8 +221,8 @@
     };
     legend.addTo(map);
 
-    var ctx = document.getElementById('radiationChart').getContext('2d');
-    var radiationChart = new Chart(ctx, {
+    const ctx = document.getElementById('radiationChart').getContext('2d');
+    const radiationChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: [],
@@ -182,77 +241,64 @@
           title: {
             display: true,
             text: 'Radiation Level Over Time',
-            font: {
-              size: 20
-            },
-            padding: {
-              top: 10,
-              bottom: 20
-            }
+            font: { size: 20 },
+            padding: { top: 10, bottom: 20 }
           }
         },
         scales: {
           x: {
             type: 'time',
-            title: {
-              display: true,
-              text: 'Time'
-            }
+            title: { display: true, text: 'Time' }
           },
           y: {
-            title: {
-              display: true,
-              text: 'Radiation Level (µSv/h)'
-            }
+            title: { display: true, text: 'Radiation Level (µSv/h)' }
           }
         }
       }
     });
 
-    function getColor(radiation) {
-      if (radiation < 0.1) return 'green';
-      else if (radiation < 0.5) return 'orange';
-      else return 'red';
+    function getColor(value) {
+      if (value < 0.1) return 'green';
+      if (value < 0.5) return 'orange';
+      return 'red';
     }
 
-    function fetchData(numPoints) {
-      var channelId = '2849195';
-      var url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${numPoints}`;
+    function fetchData(limit) {
+      document.getElementById('detector-light').setAttribute('fill', 'red');
+
+      const channelId = '2849195';
+      const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
 
       fetch(url)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           data.feeds.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
           markers.clearLayers();
 
-          var times = [];
-          var radiations = [];
-
-          var sumLat = 0, sumLon = 0, count = 0;
+          const times = [];
+          const values = [];
+          let sumLat = 0, sumLon = 0, count = 0;
 
           data.feeds.forEach(feed => {
-            var lat = parseFloat(feed.field4);
-            var lon = parseFloat(feed.field5);
-            var radiation = parseFloat(feed.field3);
-            var time = feed.created_at;
+            const lat = parseFloat(feed.field4);
+            const lon = parseFloat(feed.field5);
+            const val = parseFloat(feed.field3);
+            const time = feed.created_at;
 
-            if (!isNaN(lat) && !isNaN(lon) && 
-                lat >= 20.5 && lat <= 26.7 && 
-                lon >= 88.0 && lon <= 92.7) {
-              if (!isNaN(radiation)) {
+            if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
+              if (!isNaN(val)) {
                 times.push(time);
-                radiations.push(radiation);
+                values.push(val);
               }
 
-              var marker = L.circleMarker([lat, lon], {
+              L.circleMarker([lat, lon], {
                 radius: 6,
-                fillColor: getColor(radiation),
+                fillColor: getColor(val),
                 color: '#000',
                 weight: 1,
                 opacity: 1,
                 fillOpacity: 0.8
-              }).addTo(markers);
-              marker.bindPopup(`Radiation: ${radiation} µSv/h<br>Time: ${time}`);
+              }).addTo(markers).bindPopup(`Radiation: ${val} µSv/h<br>Time: ${time}`);
 
               sumLat += lat;
               sumLon += lon;
@@ -260,44 +306,33 @@
             }
           });
 
-          if (data.feeds.length > 0) {
-            var latestFeed = data.feeds[data.feeds.length - 1];
-            var latestRadiation = parseFloat(latestFeed.field3);
-            document.getElementById('latest-value').innerText = !isNaN(latestRadiation)
-              ? latestRadiation.toFixed(2)
-              : 'N/A';
-          } else {
-            document.getElementById('latest-value').innerText = 'N/A';
-          }
+          const latest = data.feeds[data.feeds.length - 1];
+          const latestVal = parseFloat(latest?.field3);
+          document.getElementById('detector-display').textContent = isNaN(latestVal) ? 'N/A µSv/h' : `${latestVal.toFixed(2)} µSv/h`;
 
           radiationChart.data.labels = times;
-          radiationChart.data.datasets[0].data = radiations;
+          radiationChart.data.datasets[0].data = values;
           radiationChart.update();
 
-          // Center to average lat/lon
-          if (count > 0) {
-            var avgLat = sumLat / count;
-            var avgLon = sumLon / count;
-            map.setView([avgLat, avgLon], 13); // Zoom level ~10 km
-          }
+          if (count > 0) map.setView([sumLat / count, sumLon / count], 13);
         })
-        .catch(error => console.error('Error fetching data:', error));
+        .catch(console.error)
+        .finally(() => {
+          document.getElementById('detector-light').setAttribute('fill', 'blue');
+        });
     }
 
     function updateMap() {
-      var numPoints = document.getElementById('points').value;
-      if (numPoints < 1 || numPoints > 8000) {
+      const val = parseInt(document.getElementById('points').value);
+      if (val < 1 || val > 8000) {
         alert('Please enter a number between 1 and 8000.');
         return;
       }
-      fetchData(numPoints);
+      fetchData(val);
     }
 
     fetchData(8000);
-    setInterval(() => {
-      var numPoints = document.getElementById('points').value;
-      fetchData(numPoints);
-    }, 5000);
+    setInterval(() => fetchData(document.getElementById('points').value), 5000);
   </script>
 </body>
 </html>
