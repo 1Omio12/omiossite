@@ -133,6 +133,40 @@
       width: 250px;
     }
 
+    .legend-container {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .legend-toggle {
+      background: #3182ce;
+      color: #ffffff;
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.3s ease;
+    }
+
+    .legend-toggle:hover {
+      background: #2b6cb0;
+    }
+
+    .legend-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .legend-content.legend-open {
+      max-height: 500px; /* Adjust based on content height */
+    }
+
     .legend-item {
       display: flex;
       align-items: center;
@@ -302,26 +336,51 @@
 
     const legend = L.control({position: 'bottomright'});
     legend.onAdd = function () {
-      const div = L.DomUtil.create('div', 'info legend');
+      const div = L.DomUtil.create('div', 'legend-container');
       div.innerHTML = `
-        <div class="legend-item">
-          <i style="background:#4fd1c5"></i>
-          <span>Less than 0.1 µSv/h</span>
+        <button class="legend-toggle">Toggle Legend</button>
+        <div class="legend-content">
+          <div class="legend">
+            <div class="legend-item">
+              <i style="background:#4fd1c5"></i>
+              <span>Less than 0.1 µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#f6e05e"></i>
+              <span>0.1 to less than 0.5 µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#f6ad55"></i>
+              <span>0.5 to less than 1.0 µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#f56565"></i>
+              <span>1.0 to less than 2.0 µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#e53e3e"></i>
+              <span>2.0 to less than 5.0 µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#9f7aea"></i>
+              <span>5.0 to less than 20.0 µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#742a2a"></i>
+              <span>20.0 µSv/h and above</span>
+            </div>
+            <div class="legend-item">
+              <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
+              <span>Latest Location</span>
+            </div>
+            <button id="show-latest-location">Show Latest Location</button>
+          </div>
         </div>
-        <div class="legend-item">
-          <i style="background:#f6ad55"></i>
-          <span>0.1 to less than 0.5 µSv/h</span>
-        </div>
-        <div class="legend-item">
-          <i style="background:#e53e3e"></i>
-          <span>0.5 µSv/h and above</span>
-        </div>
-        <div class="legend-item">
-          <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
-          <span>Latest Location</span>
-        </div>
-        <button id="show-latest-location">Show Latest Location</button>
       `;
+      L.DomEvent.on(div.querySelector('.legend-toggle'), 'click', function () {
+        const content = div.querySelector('.legend-content');
+        content.classList.toggle('legend-open');
+      });
       L.DomEvent.on(div.querySelector('#show-latest-location'), 'click', function () {
         if (latestValidFeed) {
           const lat = parseFloat(latestValidFeed.field4);
@@ -386,9 +445,13 @@
     });
 
     function getColor(value) {
-      if (value < 0.1) return '#4fd1c5';
-      if (value < 0.5) return '#f6ad55';
-      return '#e53e3e';
+      if (value < 0.1) return '#4fd1c5';      // Safe: Teal
+      if (value < 0.5) return '#f6e05e';      // Slightly elevated: Yellow
+      if (value < 1.0) return '#f6ad55';      // Mildly elevated: Orange
+      if (value < 2.0) return '#f56565';      // Moderate: Red-Orange
+      if (value < 5.0) return '#e53e3e';      // High: Red
+      if (value < 20.0) return '#9f7aea';     // Very high: Purple
+      return '#742a2a';                       // Extremely hazardous: Dark Red
     }
 
     function fetchData(limit, resetView = false) {
@@ -442,6 +505,7 @@
           const latest = data.feeds[data.feeds.length - 1];
           const latestVal = parseFloat(latest?.field3);
           document.getElementById('detector-display').textContent = isNaN(latestVal) ? 'N/A µSv/h' : `${latestVal.toFixed(2)} µSv/h`;
+          document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal));
 
           radiationChart.data.labels = times;
           radiationChart.data.datasets[0].data = values;
@@ -454,7 +518,8 @@
         })
         .catch(console.error)
         .finally(() => {
-          document.getElementById('detector-light').setAttribute('fill', '#3182ce');
+          const latestVal = parseFloat(latestValidFeed?.field3);
+          document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal));
         });
     }
 
