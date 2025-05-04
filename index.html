@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
   <title>ORadiation Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -96,6 +96,8 @@
       border: none;
       cursor: pointer;
       transition: background 0.3s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .controls button:hover {
@@ -127,10 +129,10 @@
       background: #ffffff;
       padding: 1.5rem;
       border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
       font-size: 0.875rem;
       color: #4a5568;
-      width: 250px;
+      width: 100%;
+      max-width: 250px;
     }
 
     .legend-container {
@@ -143,7 +145,7 @@
       background: #3182ce;
       color: #ffffff;
       width: 100%;
-      padding: 0.75rem;
+      padding: 1rem;
       border-radius: 0.75rem;
       border: none;
       font-size: 0.875rem;
@@ -151,6 +153,9 @@
       cursor: pointer;
       text-align: center;
       transition: background 0.3s ease;
+      user-select: none;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .legend-toggle:hover {
@@ -199,6 +204,8 @@
       font-weight: 500;
       cursor: pointer;
       transition: background 0.3s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .legend button:hover {
@@ -377,11 +384,19 @@
           </div>
         </div>
       `;
-      L.DomEvent.on(div.querySelector('.legend-toggle'), 'click', function () {
+      const toggleButton = div.querySelector('.legend-toggle');
+      const showLatestButton = div.querySelector('#show-latest-location');
+      
+      // Toggle legend for both click and touchstart
+      L.DomEvent.on(toggleButton, 'click touchstart', function (e) {
+        e.preventDefault(); // Prevent default touch behaviors
         const content = div.querySelector('.legend-content');
         content.classList.toggle('legend-open');
       });
-      L.DomEvent.on(div.querySelector('#show-latest-location'), 'click', function () {
+
+      // Handle Show Latest Location for both click and touchstart
+      L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
+        e.preventDefault(); // Prevent default touch behaviors
         if (latestValidFeed) {
           const lat = parseFloat(latestValidFeed.field4);
           const lon = parseFloat(latestValidFeed.field5);
