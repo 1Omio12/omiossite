@@ -519,7 +519,7 @@
 
           const latest = data.feeds[data.feeds.length - 1];
           const latestVal = parseFloat(latest?.field3);
-          document.getElementById('detector-display').textContent = isNaN(latestVal) ? 'N/A µSv/h' : `${latestVal.toFixed(2)} µSv/h`;
+          document.getElementById('detector-display').textContent = isNaN(latestVal) ? 'N/A µSv/h' : `${latestVal.toFixed(3)} µSv/h`;
           document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal));
 
           radiationChart.data.labels = times;
