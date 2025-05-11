@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-  <title>ORadiation Map</title>
+  <title>ORadiation Dual Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -104,7 +104,7 @@
       background: #2b6cb0;
     }
 
-    #chart-container {
+    .chart-container {
       background: #ffffff;
       padding: 2rem;
       border-radius: 0.75rem;
@@ -112,7 +112,7 @@
       margin-bottom: 2rem;
     }
 
-    #map {
+    #circle-map, #heat-map {
       height: 600px;
       border-radius: 0.75rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -169,7 +169,7 @@
     }
 
     .legend-content.legend-open {
-      max-height: 500px; /* Adjust based on content height */
+      max-height: 500px;
     }
 
     .legend-item {
@@ -280,7 +280,7 @@
   <div class="header">
     <img src="Military_Institute_of_Science_and_Technology_Monogram.svg.png" alt="MIST Logo" class="h-14 rounded-lg shadow-sm" />
     <h1><b><big>|| OMIO'S RADIATION MONITORING SYSTEM ||</b></h1>
-    <div class="w-14"></div> <!-- Spacer for alignment -->
+    <div class="w-14"></div>
   </div>
 
   <div class="container">
@@ -289,7 +289,7 @@
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
-            <feFlood flood-color="#4fd1c5" flood-opacity="0.3"/>
+            <feFlood flood-color="#3b82f6" flood-opacity="0.3"/>
             <feComposite in2="blur" operator="in"/>
             <feMerge>
               <feMergeNode/>
@@ -308,19 +308,61 @@
       </svg>
     </div>
 
+    <!-- Circle Marker Map Section -->
     <div class="controls">
-      <label for="points" class="font-medium">Number of Data Points:</label>
-      <input type="number" id="points" min="1" max="8000" value="8000" class="focus:ring focus:ring-blue-200"/>
-      <button onclick="updateMap()">Update Data</button>
+      <label for="circle-points" class="font-medium">Number of Data Points (Circle Map):</label>
+      <input type="number" id="circle-points" min="1" max="8000" value="8000" class="focus:ring focus:ring-blue-200"/>
+      <label for="circle-start-date" class="font-medium">Start Date:</label>
+      <input type="date" id="circle-start-date" class="focus:ring focus:ring-blue-200"/>
+      <label for="circle-start-time" class="font-medium">Start Time:</label>
+      <input type="time" id="circle-start-time" class="focus:ring focus:ring-blue-200"/>
+      <label for="circle-end-date" class="font-medium">End Date:</label>
+      <input type="date" id="circle-end-date" class="focus:ring focus:ring-blue-200"/>
+      <label for="circle-end-time" class="font-medium">End Time:</label>
+      <input type="time" id="circle-end-time" class="focus:ring focus:ring-blue-200"/>
+      <label for="circle-min-value" class="font-medium">Min Value (µSv/h):</label>
+      <input type="number" id="circle-min-value" step="0.1" value="0" class="focus:ring focus:ring-blue-200" oninput="updateCircleRange(this.value, document.getElementById('circle-max-value').value, true)"/>
+      <label for="circle-max-value" class="font-medium">Max Value (µSv/h):</label>
+      <input type="number" id="circle-max-value" step="0.1" value="10" class="focus:ring focus:ring-blue-200" oninput="updateCircleRange(document.getElementById('circle-min-value').value, this.value, true)"/>
+      <button onclick="searchCircleData()">Search Time Range</button>
+      <button onclick="updateCircleMap()">Update Data</button>
     </div>
 
-    <div id="chart-container">
-      <canvas id="radiationChart"></canvas>
+    <div class="chart-container">
+      <canvas id="circle-radiationChart"></canvas>
     </div>
 
-    <h2>Radiation Mapping Dashboard</h2>
-    <div id="map"></div>
-    <p class="info">Map updates automatically every 5 seconds. Maximum 8000 data points.</p>
+    <h2>Radiation Mapping Dashboard (Circle Markers)</h2>
+    <div id="circle-map"></div>
+    <p class="info">Circle map updates automatically every 5 seconds unless time range is set.</p>
+
+    <!-- Heatmap Section -->
+    <div class="controls">
+      <label for="heat-points" class="font-medium">Number of Data Points (Heatmap):</label>
+      <input type="number" id="heat-points" min="1" max="8000" value="8000" class="focus:ring focus:ring-blue-200"/>
+      <label for="heat-start-date" class="font-medium">Start Date:</label>
+      <input type="date" id="heat-start-date" class="focus:ring focus:ring-blue-200"/>
+      <label for="heat-start-time" class="font-medium">Start Time:</label>
+      <input type="time" id="heat-start-time" class="focus:ring focus:ring-blue-200"/>
+      <label for="heat-end-date" class="font-medium">End Date:</label>
+      <input type="date" id="heat-end-date" class="focus:ring focus:ring-blue-200"/>
+      <label for="heat-end-time" class="font-medium">End Time:</label>
+      <input type="time" id="heat-end-time" class="focus:ring focus:ring-blue-200"/>
+      <label for="heat-min-value" class="font-medium">Min Value (µSv/h):</label>
+      <input type="number" id="heat-min-value" step="0.1" value="0" class="focus:ring focus:ring-blue-200" oninput="updateHeatRange(this.value, document.getElementById('heat-max-value').value, true)"/>
+      <label for="heat-max-value" class="font-medium">Max Value (µSv/h):</label>
+      <input type="number" id="heat-max-value" step="0.1" value="10" class="focus:ring focus:ring-blue-200" oninput="updateHeatRange(document.getElementById('heat-min-value').value, this.value, true)"/>
+      <button onclick="searchHeatData()">Search Time Range</button>
+      <button onclick="updateHeatMap()">Update Data</button>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="heat-radiationChart"></canvas>
+    </div>
+
+    <h2>Radiation Heatmap Dashboard</h2>
+    <div id="heat-map"></div>
+    <p class="info">Heatmap updates automatically every 5 seconds unless time range is set.</p>
   </div>
 
   <div class="footer">
@@ -328,80 +370,74 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
   <script>
-    const map = L.map('map').setView([23.685, 90.3563], 7);
+    // Circle Marker Map Setup
+    const circleMap = L.map('circle-map').setView([23.685, 90.3563], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    }).addTo(circleMap);
 
-    const markers = L.layerGroup().addTo(map);
-    let latestValidFeed = null;
-    let isInitialLoad = true;
+    const circleMarkers = L.layerGroup().addTo(circleMap);
+    let circleLatestValidFeed = null;
+    let circleIsInitialLoad = true;
+    let circleMinValue = 0;
+    let circleMaxValue = 10;
 
-    const legend = L.control({position: 'bottomright'});
-    legend.onAdd = function () {
+    const circleLegend = L.control({position: 'bottomright'});
+    circleLegend.onAdd = function () {
       const div = L.DomUtil.create('div', 'legend-container');
       div.innerHTML = `
         <button class="legend-toggle">Toggle Legend</button>
         <div class="legend-content">
-          <div class="legend">
+          <div class="legend" id="circle-legend-content">
             <div class="legend-item">
-              <i style="background:#4fd1c5"></i>
-              <span>Less than 0.1 µSv/h</span>
+              <i style="background:#3b82f6"></i>
+              <span>${circleMinValue.toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.2).toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:#f6e05e"></i>
-              <span>0.1 to less than 0.5 µSv/h</span>
+              <i style="background:#06b6d4"></i>
+              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.2).toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.4).toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:#f6ad55"></i>
-              <span>0.5 to less than 1.0 µSv/h</span>
+              <i style="background:#22c55e"></i>
+              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.4).toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.6).toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:#f56565"></i>
-              <span>1.0 to less than 2.0 µSv/h</span>
+              <i style="background:#facc15"></i>
+              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.6).toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.8).toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:#e53e3e"></i>
-              <span>2.0 to less than 5.0 µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#9f7aea"></i>
-              <span>5.0 to less than 20.0 µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#742a2a"></i>
-              <span>20.0 µSv/h and above</span>
+              <i style="background:#ef4444"></i>
+              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.8).toFixed(1)} to ${circleMaxValue.toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
               <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
               <span>Latest Location</span>
             </div>
-            <button id="show-latest-location">Show Latest Location</button>
+            <button id="circle-show-latest-location">Show Latest Location</button>
           </div>
         </div>
       `;
       const toggleButton = div.querySelector('.legend-toggle');
-      const showLatestButton = div.querySelector('#show-latest-location');
+      const showLatestButton = div.querySelector('#circle-show-latest-location');
       
-      // Toggle legend for both click and touchstart
       L.DomEvent.on(toggleButton, 'click touchstart', function (e) {
-        e.preventDefault(); // Prevent default touch behaviors
+        e.preventDefault();
         const content = div.querySelector('.legend-content');
         content.classList.toggle('legend-open');
       });
 
-      // Handle Show Latest Location for both click and touchstart
       L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
-        e.preventDefault(); // Prevent default touch behaviors
-        if (latestValidFeed) {
-          const lat = parseFloat(latestValidFeed.field4);
-          const lon = parseFloat(latestValidFeed.field5);
-          const val = parseFloat(latestValidFeed.field3);
-          const time = latestValidFeed.created_at;
+        e.preventDefault();
+        if (circleLatestValidFeed) {
+          const lat = parseFloat(circleLatestValidFeed.field4);
+          const lon = parseFloat(circleLatestValidFeed.field5);
+          const val = parseFloat(circleLatestValidFeed.field3);
+          const time = circleLatestValidFeed.created_at;
 
           const customIcon = L.icon({
             iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -411,20 +447,20 @@
           });
 
           L.marker([lat, lon], { icon: customIcon })
-            .addTo(markers)
+            .addTo(circleMarkers)
             .bindPopup(`Latest Location<br>Radiation: ${val} µSv/h<br>Time: ${time}`);
 
-          map.panTo([lat, lon], { animate: true, duration: 1 });
+          circleMap.panTo([lat, lon], { animate: true, duration: 1 });
         } else {
           alert('No valid latest location available.');
         }
       });
       return div;
     };
-    legend.addTo(map);
+    circleLegend.addTo(circleMap);
 
-    const ctx = document.getElementById('radiationChart').getContext('2d');
-    const radiationChart = new Chart(ctx, {
+    const circleCtx = document.getElementById('circle-radiationChart').getContext('2d');
+    const circleRadiationChart = new Chart(circleCtx, {
       type: 'line',
       data: {
         labels: [],
@@ -442,7 +478,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Radiation Level Over Time',
+            text: 'Radiation Level Over Time (Circle Map)',
             font: { size: 20, family: 'Roboto' },
             padding: { top: 10, bottom: 20 }
           }
@@ -459,18 +495,238 @@
       }
     });
 
-    function getColor(value) {
-      if (value < 0.1) return '#4fd1c5';      // Safe: Teal
-      if (value < 0.5) return '#f6e05e';      // Slightly elevated: Yellow
-      if (value < 1.0) return '#f6ad55';      // Mildly elevated: Orange
-      if (value < 2.0) return '#f56565';      // Moderate: Red-Orange
-      if (value < 5.0) return '#e53e3e';      // High: Red
-      if (value < 20.0) return '#9f7aea';     // Very high: Purple
-      return '#742a2a';                       // Extremely hazardous: Dark Red
+    // Heatmap Setup
+    const heatMap = L.map('heat-map').setView([23.685, 90.3563], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(heatMap);
+
+    let heatLayer = L.heatLayer([], {
+      radius: 50,
+      blur: 40,
+      minOpacity: 0.4,
+      maxZoom: 17,
+      gradient: {
+        0.0: '#3b82f6',  // Blue
+        0.2: '#06b6d4',  // Cyan
+        0.4: '#22c55e',  // Green
+        0.6: '#facc15',  // Yellow
+        1.0: '#f10f05'   // Red
+      }
+    }).addTo(heatMap);
+
+    let heatLatestValidFeed = null;
+    let heatIsInitialLoad = true;
+    let heatMinValue = 0;
+    let heatMaxValue = 10;
+
+    const heatLegend = L.control({position: 'bottomright'});
+    heatLegend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend-container');
+      div.innerHTML = `
+        <button class="legend-toggle">Toggle Legend</button>
+        <div class="legend-content">
+          <div class="legend" id="heat-legend-content">
+            <div class="legend-item">
+              <i style="background:#3b82f6"></i>
+              <span>${heatMinValue.toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.2).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#06b6d4"></i>
+              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.2).toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.4).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#22c55e"></i>
+              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.4).toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.6).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#facc15"></i>
+              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.6).toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.8).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:#ef4444"></i>
+              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.8).toFixed(1)} to ${heatMaxValue.toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
+              <span>Latest Location</span>
+            </div>
+            <button id="heat-show-latest-location">Show Latest Location</button>
+          </div>
+        </div>
+      `;
+      const toggleButton = div.querySelector('.legend-toggle');
+      const showLatestButton = div.querySelector('#heat-show-latest-location');
+
+      L.DomEvent.on(toggleButton, 'click touchstart', function (e) {
+        e.preventDefault();
+        const content = div.querySelector('.legend-content');
+        content.classList.toggle('legend-open');
+      });
+
+      L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
+        e.preventDefault();
+        if (heatLatestValidFeed) {
+          const lat = parseFloat(heatLatestValidFeed.field4);
+          const lon = parseFloat(heatLatestValidFeed.field5);
+          const val = parseFloat(heatLatestValidFeed.field3);
+          const time = heatLatestValidFeed.created_at;
+
+          const customIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+          });
+
+          L.marker([lat, lon], { icon: customIcon })
+            .addTo(heatMap)
+            .bindPopup(`Latest Location<br>Radiation: ${val} µSv/h<br>Time: ${time}`);
+
+          heatMap.panTo([lat, lon], { animate: true, duration: 1 });
+        } else {
+          alert('No valid latest location available.');
+        }
+      });
+      return div;
+    };
+    heatLegend.addTo(heatMap);
+
+    const heatCtx = document.getElementById('heat-radiationChart').getContext('2d');
+    const heatRadiationChart = new Chart(heatCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Radiation Level (µSv/h)',
+          data: [],
+          borderColor: '#3182ce',
+          backgroundColor: 'rgba(49, 130, 206, 0.2)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Radiation Level Over Time (Heatmap)',
+            font: { size: 20, family: 'Roboto' },
+            padding: { top: 10, bottom: 20 }
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            title: { display: true, text: 'Time', font: { family: 'Roboto' } }
+          },
+          y: {
+            title: { display: true, text: 'Radiation Level (µSv/h)', font: { family: 'Roboto' } }
+          }
+        }
+      }
+    });
+
+    function getColor(value, minVal, maxVal) {
+      const normalized = (value - minVal) / (maxVal - minVal);
+      if (normalized <= 0.2) return '#3b82f6';  // Blue
+      if (normalized <= 0.4) return '#06b6d4';  // Cyan
+      if (normalized <= 0.6) return '#22c55e';  // Green
+      if (normalized <= 0.8) return '#facc15';  // Yellow
+      return '#ef4444';                         // Red
     }
 
-    function fetchData(limit, resetView = false) {
-      document.getElementById('detector-light').setAttribute('fill', '#e53e3e');
+    function updateLegend(minVal, maxVal, isCircle) {
+      const legendContent = document.getElementById(`${isCircle ? 'circle' : 'heat'}-legend-content`);
+      if (legendContent) {
+        const colors = ['#3b82f6', '#06b6d4', '#22c55e', '#facc15', '#ef4444'];
+        legendContent.innerHTML = `
+          <div class="legend-item">
+            <i style="background:${colors[0]}"></i>
+            <span>${minVal.toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} µSv/h</span>
+          </div>
+          <div class="legend-item">
+            <i style="background:${colors[1]}"></i>
+            <span>${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} µSv/h</span>
+          </div>
+          <div class="legend-item">
+            <i style="background:${colors[2]}"></i>
+            <span>${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} µSv/h</span>
+          </div>
+          <div class="legend-item">
+            <i style="background:${colors[3]}"></i>
+            <span>${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} µSv/h</span>
+          </div>
+          <div class="legend-item">
+            <i style="background:${colors[4]}"></i>
+            <span>${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} to ${maxVal.toFixed(1)} µSv/h</span>
+          </div>
+          <div class="legend-item">
+            <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
+            <span>Latest Location</span>
+          </div>
+          <button id="${isCircle ? 'circle' : 'heat'}-show-latest-location">Show Latest Location</button>
+        `;
+        const showLatestButton = legendContent.querySelector(`#${isCircle ? 'circle' : 'heat'}-show-latest-location`);
+        L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
+          e.preventDefault();
+          const latestFeed = isCircle ? circleLatestValidFeed : heatLatestValidFeed;
+          if (latestFeed) {
+            const lat = parseFloat(latestFeed.field4);
+            const lon = parseFloat(latestFeed.field5);
+            const val = parseFloat(latestFeed.field3);
+            const time = latestFeed.created_at;
+
+            const customIcon = L.icon({
+              iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34]
+            });
+
+            L.marker([lat, lon], { icon: customIcon })
+              .addTo(isCircle ? circleMarkers : heatMap)
+              .bindPopup(`Latest Location<br>Radiation: ${val} µSv/h<br>Time: ${time}`);
+
+            (isCircle ? circleMap : heatMap).panTo([lat, lon], { animate: true, duration: 1 });
+          } else {
+            alert('No valid latest location available.');
+          }
+        });
+      }
+    }
+
+    function updateCircleRange(minVal, maxVal, forceUpdate = false) {
+      if (minVal >= maxVal) {
+        alert('Minimum value must be less than maximum value.');
+        return;
+      }
+      circleMinValue = parseFloat(minVal);
+      circleMaxValue = parseFloat(maxVal);
+      updateLegend(circleMinValue, circleMaxValue, true);
+      if (forceUpdate) {
+        fetchCircleData(document.getElementById('circle-points').value, null, null, null, null, circleMinValue, circleMaxValue, true);
+      }
+    }
+
+    function updateHeatRange(minVal, maxVal, forceUpdate = false) {
+      if (minVal >= maxVal) {
+        alert('Minimum value must be less than maximum value.');
+        return;
+      }
+      heatMinValue = parseFloat(minVal);
+      heatMaxValue = parseFloat(maxVal);
+      updateLegend(heatMinValue, heatMaxValue, false);
+      if (forceUpdate) {
+        fetchHeatData(document.getElementById('heat-points').value, null, null, null, null, heatMinValue, heatMaxValue, true);
+      }
+    }
+
+    function fetchCircleData(limit, startDate, startTime, endDate, endTime, minVal, maxVal, resetView = false) {
+      document.getElementById('detector-light').setAttribute('fill', '#ef4444');
+      circleMinValue = minVal;
+      circleMaxValue = maxVal;
 
       const channelId = '2955808';
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
@@ -479,40 +735,48 @@
         .then(res => res.json())
         .then(data => {
           data.feeds.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-          markers.clearLayers();
+          circleMarkers.clearLayers();
 
           const times = [];
           const values = [];
           let sumLat = 0, sumLon = 0, count = 0;
-          latestValidFeed = null;
+          circleLatestValidFeed = null;
+
+          const startTimeObj = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
+          const endTimeObj = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
 
           data.feeds.forEach(feed => {
+            const feedTime = new Date(feed.created_at);
+            if ((startTimeObj && feedTime < startTimeObj) || (endTimeObj && feedTime > endTimeObj)) {
+              return; // Skip if outside time range
+            }
+
             const lat = parseFloat(feed.field4);
             const lon = parseFloat(feed.field5);
             const val = parseFloat(feed.field3);
             const time = feed.created_at;
 
             if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
-              if (!isNaN(val)) {
+              if (!isNaN(val) && val >= minVal && val <= maxVal) {
                 times.push(time);
                 values.push(val);
               }
 
               L.circleMarker([lat, lon], {
                 radius: 6,
-                fillColor: getColor(val),
+                fillColor: getColor(val, minVal, maxVal),
                 color: '#2d3748',
                 weight: 1,
                 opacity: 1,
                 fillOpacity: 0.8
-              }).addTo(markers).bindPopup(`Radiation: ${val} µSv/h<br>Time: ${time}`);
+              }).addTo(circleMarkers).bindPopup(`Radiation: ${val} µSv/h<br>Time: ${time}`);
 
               sumLat += lat;
               sumLon += lon;
               count++;
 
               if (!isNaN(val)) {
-                latestValidFeed = feed;
+                circleLatestValidFeed = feed;
               }
             }
           });
@@ -520,35 +784,187 @@
           const latest = data.feeds[data.feeds.length - 1];
           const latestVal = parseFloat(latest?.field3);
           document.getElementById('detector-display').textContent = isNaN(latestVal) ? 'N/A µSv/h' : `${latestVal.toFixed(3)} µSv/h`;
-          document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal));
+          document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal, minVal, maxVal));
 
-          radiationChart.data.labels = times;
-          radiationChart.data.datasets[0].data = values;
-          radiationChart.update();
+          circleRadiationChart.data.labels = times;
+          circleRadiationChart.data.datasets[0].data = values;
+          circleRadiationChart.update();
 
-          if ((isInitialLoad || resetView) && count > 0) {
-            map.setView([sumLat / count, sumLon / count], 13);
-            isInitialLoad = false;
+          updateLegend(minVal, maxVal, true);
+
+          if ((circleIsInitialLoad || resetView) && count > 0) {
+            circleMap.setView([sumLat / count, sumLon / count], 13);
+            circleIsInitialLoad = false;
           }
         })
         .catch(console.error)
         .finally(() => {
-          const latestVal = parseFloat(latestValidFeed?.field3);
-          document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal));
+          const latestVal = parseFloat(circleLatestValidFeed?.field3);
+          document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal, minVal, maxVal));
         });
     }
 
-    function updateMap() {
-      const val = parseInt(document.getElementById('points').value);
-      if (val < 1 || val > 8000) {
-        alert('Please enter a number between 1 and 8000.');
-        return;
-      }
-      fetchData(val, true);
+    function fetchHeatData(limit, startDate, startTime, endDate, endTime, minVal, maxVal, resetView = false) {
+      heatMinValue = minVal;
+      heatMaxValue = maxVal;
+
+      const channelId = '2955808';
+      const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          data.feeds.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          const heatPoints = [];
+          const times = [];
+          const values = [];
+          let sumLat = 0, sumLon = 0, count = 0;
+          heatLatestValidFeed = null;
+
+          const startTimeObj = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
+          const endTimeObj = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
+
+          data.feeds.forEach(feed => {
+            const feedTime = new Date(feed.created_at);
+            if ((startTimeObj && feedTime < startTimeObj) || (endTimeObj && feedTime > endTimeObj)) {
+              return; // Skip if outside time range
+            }
+
+            const lat = parseFloat(feed.field4);
+            const lon = parseFloat(feed.field5);
+            const val = parseFloat(feed.field3);
+            const time = feed.created_at;
+
+            if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
+              if (!isNaN(val) && val >= minVal && val <= maxVal) {
+                times.push(time);
+                values.push(val);
+                const intensity = (val - minVal) / (maxVal - minVal); // Normalize to 0-1
+                heatPoints.push([lat, lon, intensity]);
+              }
+
+              sumLat += lat;
+              sumLon += lon;
+              count++;
+
+              if (!isNaN(val)) {
+                heatLatestValidFeed = feed;
+              }
+            }
+          });
+
+          heatLayer.setLatLngs(heatPoints);
+
+          heatRadiationChart.data.labels = times;
+          heatRadiationChart.data.datasets[0].data = values;
+          heatRadiationChart.update();
+
+          updateLegend(minVal, maxVal, false);
+
+          if ((heatIsInitialLoad || resetView) && count > 0) {
+            heatMap.setView([sumLat / count, sumLon / count], 13);
+            heatIsInitialLoad = false;
+          }
+        })
+        .catch(console.error);
     }
 
-    fetchData(8000, true);
-    setInterval(() => fetchData(document.getElementById('points').value, false), 5000);
+    function searchCircleData() {
+      const limit = parseInt(document.getElementById('circle-points').value);
+      const startDate = document.getElementById('circle-start-date').value;
+      const startTime = document.getElementById('circle-start-time').value;
+      const endDate = document.getElementById('circle-end-date').value;
+      const endTime = document.getElementById('circle-end-time').value;
+      const minVal = parseFloat(document.getElementById('circle-min-value').value);
+      const maxVal = parseFloat(document.getElementById('circle-max-value').value);
+
+      if (limit < 1 || limit > 8000) {
+        alert('Please enter a number between 1 and 8000 for Circle Map.');
+        return;
+      }
+      if (minVal >= maxVal) {
+        alert('Minimum value must be less than maximum value.');
+        return;
+      }
+      if ((startDate || startTime) && (endDate || endTime)) {
+        const startTimeObj = new Date(`${startDate}T${startTime || '00:00'}`);
+        const endTimeObj = new Date(`${endDate}T${endTime || '23:59'}`);
+        if (startTimeObj > endTimeObj) {
+          alert('Start time must be before end time.');
+          return;
+        }
+      }
+      fetchCircleData(limit, startDate, startTime, endDate, endTime, minVal, maxVal, true);
+    }
+
+    function searchHeatData() {
+      const limit = parseInt(document.getElementById('heat-points').value);
+      const startDate = document.getElementById('heat-start-date').value;
+      const startTime = document.getElementById('heat-start-time').value;
+      const endDate = document.getElementById('heat-end-date').value;
+      const endTime = document.getElementById('heat-end-time').value;
+      const minVal = parseFloat(document.getElementById('heat-min-value').value);
+      const maxVal = parseFloat(document.getElementById('heat-max-value').value);
+
+      if (limit < 1 || limit > 8000) {
+        alert('Please enter a number between 1 and 8000 for Heatmap.');
+        return;
+      }
+      if (minVal >= maxVal) {
+        alert('Minimum value must be less than maximum value.');
+        return;
+      }
+      if ((startDate || startTime) && (endDate || endTime)) {
+        const startTimeObj = new Date(`${startDate}T${startTime || '00:00'}`);
+        const endTimeObj = new Date(`${endDate}T${endTime || '23:59'}`);
+        if (startTimeObj > endTimeObj) {
+          alert('Start time must be before end time.');
+          return;
+        }
+      }
+      fetchHeatData(limit, startDate, startTime, endDate, endTime, minVal, maxVal, true);
+    }
+
+    function updateCircleMap() {
+      const val = parseInt(document.getElementById('circle-points').value);
+      const minVal = parseFloat(document.getElementById('circle-min-value').value);
+      const maxVal = parseFloat(document.getElementById('circle-max-value').value);
+      if (val < 1 || val > 8000) {
+        alert('Please enter a number between 1 and 8000 for Circle Map.');
+        return;
+      }
+      if (minVal >= maxVal) {
+        alert('Minimum value must be less than maximum value.');
+        return;
+      }
+      fetchCircleData(val, null, null, null, null, minVal, maxVal, true);
+    }
+
+    function updateHeatMap() {
+      const val = parseInt(document.getElementById('heat-points').value);
+      const minVal = parseFloat(document.getElementById('heat-min-value').value);
+      const maxVal = parseFloat(document.getElementById('heat-max-value').value);
+      if (val < 1 || val > 8000) {
+        alert('Please enter a number between 1 and 8000 for Heatmap.');
+        return;
+      }
+      if (minVal >= maxVal) {
+        alert('Minimum value must be less than maximum value.');
+        return;
+      }
+      fetchHeatData(val, null, null, null, null, minVal, maxVal, true);
+    }
+
+    fetchCircleData(8000, null, null, null, null, 0, 10, true);
+    fetchHeatData(8000, null, null, null, null, 0, 10, true);
+    setInterval(() => {
+      const startDate = document.getElementById('circle-start-date').value || document.getElementById('heat-start-date').value;
+      const endDate = document.getElementById('circle-end-date').value || document.getElementById('heat-end-date').value;
+      if (!startDate && !endDate) {
+        fetchCircleData(document.getElementById('circle-points').value, null, null, null, null, circleMinValue, circleMaxValue, false);
+        fetchHeatData(document.getElementById('heat-points').value, null, null, null, null, heatMinValue, heatMaxValue, false);
+      }
+    }, 5000);
   </script>
 </body>
 </html>
