@@ -8,272 +8,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: #cde5fc;
-      color: #2d3748;
-      margin: 0;
-      padding: 2rem;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      flex: 1;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #1a202c;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
-    h2 {
-      font-size: 1.75rem;
-      font-weight: 500;
-      color: #2d3748;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 2rem;
-      padding: 1.5rem;
-      background: #ffffff;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .controls {
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      background: #ffffff;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 2rem;
-    }
-
-    .controls label {
-      font-size: 1rem;
-      font-weight: 500;
-      color: #4a5568;
-    }
-
-    .controls input {
-      padding: 0.75rem;
-      font-size: 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.5rem;
-      width: 140px;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .controls input:focus {
-      outline: none;
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-    }
-
-    .controls button {
-      background: #3182ce;
-      color: #ffffff;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      font-weight: 500;
-      border-radius: 0.5rem;
-      border: none;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .controls button:hover {
-      background: #2b6cb0;
-    }
-
-    .chart-container {
-      background: #ffffff;
-      padding: 2rem;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 2rem;
-    }
-
-    #circle-map, #heat-map {
-      height: 600px;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 2rem;
-    }
-
-    .info {
-      font-size: 0.875rem;
-      color: #718096;
-      text-align: center;
-    }
-
-    .legend {
-      background: #ffffff;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
-      font-size: 0.875rem;
-      color: #4a5568;
-      width: 100%;
-      max-width: 250px;
-    }
-
-    .legend-container {
-      background: #ffffff;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .legend-toggle {
-      background: #3182ce;
-      color: #ffffff;
-      width: 100%;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      border: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.3s ease;
-      user-select: none;
-      touch-action: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .legend-toggle:hover {
-      background: #2b6cb0;
-    }
-
-    .legend-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-
-    .legend-content.legend-open {
-      max-height: 500px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
-
-    .legend i {
-      width: 16px;
-      height: 16px;
-      margin-right: 0.75rem;
-      flex-shrink: 0;
-    }
-
-    .legend img {
-      width: 16px;
-      height: 16px;
-      margin-right: 0.75rem;
-      vertical-align: middle;
-    }
-
-    .legend button {
-      background: #3182ce;
-      color: #ffffff;
-      width: 100%;
-      padding: 0.75rem;
-      margin-top: 1rem;
-      border-radius: 0.5rem;
-      border: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .legend button:hover {
-      background: #2b6cb0;
-    }
-
-    #detector-container {
-      margin: 2rem auto;
-      width: 300px;
-      height: 600px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #ffffff;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    #detector-svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .detector-body {
-      fill: #edf2f7;
-      stroke: #4a5568;
-      stroke-width: 2;
-    }
-
-    .detector-antenna {
-      fill: #2d3748;
-      stroke: #2d3748;
-      stroke-width: 2;
-    }
-
-    .detector-screen {
-      fill: #e6fffa;
-      stroke: #4a5568;
-      stroke-width: 1;
-      filter: url(#glow);
-    }
-
-    .detector-button {
-      fill: #3182ce;
-      stroke: #2d3748;
-      stroke-width: 2;
-    }
-
-    .detector-text {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12px;
-      fill: #2d3748;
-      text-anchor: middle;
-      dominant-baseline: middle;
-    }
-
-    .detector-light {
-      fill: #edf2f7;
-      transition: fill 0.3s ease;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 0.875rem;
-      color: #718096;
-      padding: 1rem 0;
-      margin-top: auto;
-    }
+    body { font-family: 'Roboto', sans-serif; background: #cde5fc; color: #2d3748; margin: 0; padding: 2rem; min-height: 100vh; display: flex; flex-direction: column; }
+    .container { max-width: 1400px; margin: 0 auto; flex: 1; }
+    h1 { font-size: 2.5rem; font-weight: 700; color: #1a202c; text-align: center; margin-bottom: 1rem; }
+    h2 { font-size: 1.75rem; font-weight: 500; color: #2d3748; margin-bottom: 1.5rem; text-align: center; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding: 1.5rem; background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    .controls { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; align-items: center; background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
+    .controls label { font-size: 1rem; font-weight: 500; color: #4a5568; }
+    .controls input { padding: 0.75rem; font-size: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; width: 140px; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .controls input:focus { outline: none; border Patricecolor: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
+    .controls button { background: #3182ce; color: #ffffff; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .controls button:hover { background: #2b6cb0; }
+    .chart-container { background: #ffffff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
+    #circle-map, #heat-map { height: 600px; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
+    .info { font-size: 0.875rem; color: #718096; text-align: center; }
+    .legend { background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; color: #4a5568; width: 100%; max-width: 250px; }
+    .legend-container { background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    .legend-toggle { background: #3182ce; color: #ffffff; width: 100%; padding: 1rem; border-radius: 0.75rem; border: none; font-size: 0.875rem; font-weight: 500; cursor: pointer; text-align: center; transition: background 0.3s ease; user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    .legend-toggle:hover { background: #2b6cb0; }
+    .legend-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .legend-content.legend-open { max-height: 500px; }
+    .legend-item { display: flex; align-items: center; margin-bottom: 0.75rem; }
+    .legend i { width: 16px; height: 16px; margin-right: 0.75rem; flex-shrink: 0; }
+    .legend img { width: 16px; height: 16px; margin-right: 0.75rem; vertical-align: middle; }
+    .legend button { background: #3182ce; color: #ffffff; width: 100%; padding: 0.75rem; margin-top: 1rem; border-radius: 0.5rem; border: none; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .legend button:hover { background: #2b6cb0; }
+    #detector-container { margin: 2rem auto; width: 300px; height: 600px; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    #detector-svg { width: 100%; height: 100%; }
+    .detector-body { fill: #edf2f7; stroke: #4a5568; stroke-width: 2; }
+    .detector-antenna { fill: #2d3748; stroke: #2d3748; stroke-width: 2; }
+    .detector-screen { fill: #e6fffa; stroke: #4a5568; stroke-width: 1; filter: url(#glow); }
+    .detector-button { fill: #3182ce; stroke: #2d3748; stroke-width: 2; }
+    .detector-text { font-family: 'Courier New', Courier, monospace; font-size: 12px; fill: #2d3748; text-anchor: middle; dominant-baseline: middle; }
+    .detector-light { fill: #edf2f7; transition: fill 0.3s ease; }
+    .footer { text-align: center; font-size: 0.875rem; color: #718096; padding: 1rem 0; margin-top: auto; }
   </style>
 </head>
 <body>
@@ -377,6 +145,32 @@
   <script>
     // Global array to store heatmap data points
     let heatDataPoints = [];
+
+    // IDW Interpolation Function
+    function interpolateIDW(lat, lon, points, power = 2, maxDistance = 0.01, maxPoints = 10) {
+      // Find k-nearest points to improve performance
+      const distances = points.map(point => ({
+        point,
+        distance: Math.sqrt(Math.pow(lat - point.lat, 2) + Math.pow(lon - point.lon, 2))
+      })).filter(d => d.distance <= maxDistance && d.distance > 0); // Exclude exact matches
+
+      // Sort by distance and take top maxPoints
+      distances.sort((a, b) => a.distance - b.distance);
+      const nearest = distances.slice(0, maxPoints);
+
+      if (nearest.length === 0) return null; // No points within range
+
+      let sumValue = 0;
+      let sumWeight = 0;
+
+      nearest.forEach(({ point, distance }) => {
+        const weight = 1 / Math.pow(distance, power);
+        sumValue += weight * point.val;
+        sumWeight += weight;
+      });
+
+      return sumValue / sumWeight;
+    }
 
     // Circle Marker Map Setup
     const circleMap = L.map('circle-map').setView([23.685, 90.3563], 7);
@@ -523,30 +317,44 @@
     let heatMinValue = 0;
     let heatMaxValue = 10;
 
-    // Add click event handler for heatmap
+    // Updated Heatmap Click Handler with IDW
     heatMap.on('click', function(e) {
-      let clickedPixel = heatMap.latLngToContainerPoint(e.latlng);
+      const clickedLat = e.latlng.lat;
+      const clickedLon = e.latlng.lng;
+
+      // Compute interpolated value using IDW
+      const interpolatedValue = interpolateIDW(clickedLat, clickedLon, heatDataPoints, 2, 0.01, 10);
+
+      // Find nearest point for comparison
       let minDist = Infinity;
       let closestPoint = null;
 
       heatDataPoints.forEach(point => {
-        let pointLatLng = L.latLng(point.lat, point.lon);
-        let pointPixel = heatMap.latLngToContainerPoint(pointLatLng);
-        let dx = pointPixel.x - clickedPixel.x;
-        let dy = pointPixel.y - clickedPixel.y;
-        let dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < minDist) {
-          minDist = dist;
+        const distance = Math.sqrt(
+          Math.pow(clickedLat - point.lat, 2) + Math.pow(clickedLon - point.lon, 2)
+        );
+        if (distance < minDist) {
+          minDist = distance;
           closestPoint = point;
         }
       });
 
-      if (closestPoint) {
-        L.popup()
-          .setLatLng(e.latlng)
-          .setContent(`Nearest radiation value: ${closestPoint.val.toFixed(3)} µSv/h<br>Time: ${closestPoint.time}`)
-          .openOn(heatMap);
+      // Prepare popup content
+      let popupContent = '';
+      if (interpolatedValue !== null) {
+        popupContent += `Interpolated radiation: ${interpolatedValue.toFixed(3)} µSv/h`;
       }
+      if (closestPoint) {
+        popupContent += `${popupContent ? '<br>' : ''}Nearest radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>Time: ${closestPoint.time}`;
+      }
+      if (!popupContent) {
+        popupContent = 'No data points within range.';
+      }
+
+      L.popup()
+        .setLatLng(e.latlng)
+        .setContent(popupContent)
+        .openOn(heatMap);
     });
 
     const heatLegend = L.control({position: 'bottomright'});
