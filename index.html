@@ -375,6 +375,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
   <script>
+    // Global array to store heatmap data points
+    let heatDataPoints = [];
+
     // Circle Marker Map Setup
     const circleMap = L.map('circle-map').setView([23.685, 90.3563], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -519,6 +522,32 @@
     let heatIsInitialLoad = true;
     let heatMinValue = 0;
     let heatMaxValue = 10;
+
+    // Add click event handler for heatmap
+    heatMap.on('click', function(e) {
+      let clickedPixel = heatMap.latLngToContainerPoint(e.latlng);
+      let minDist = Infinity;
+      let closestPoint = null;
+
+      heatDataPoints.forEach(point => {
+        let pointLatLng = L.latLng(point.lat, point.lon);
+        let pointPixel = heatMap.latLngToContainerPoint(pointLatLng);
+        let dx = pointPixel.x - clickedPixel.x;
+        let dy = pointPixel.y - clickedPixel.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDist) {
+          minDist = dist;
+          closestPoint = point;
+        }
+      });
+
+      if (closestPoint) {
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(`Nearest radiation value: ${closestPoint.val.toFixed(3)} µSv/h<br>Time: ${closestPoint.time}`)
+          .openOn(heatMap);
+      }
+    });
 
     const heatLegend = L.control({position: 'bottomright'});
     heatLegend.onAdd = function () {
@@ -820,6 +849,7 @@
           const values = [];
           let sumLat = 0, sumLon = 0, count = 0;
           heatLatestValidFeed = null;
+          heatDataPoints = []; // Clear previous data points
 
           const startTimeObj = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
           const endTimeObj = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
@@ -841,6 +871,7 @@
                 values.push(val);
                 const intensity = (val - minVal) / (maxVal - minVal); // Normalize to 0-1
                 heatPoints.push([lat, lon, intensity]);
+                heatDataPoints.push({ lat, lon, val, time }); // Store data point
               }
 
               sumLat += lat;
