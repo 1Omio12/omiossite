@@ -16,7 +16,7 @@
     .controls { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; align-items: center; background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
     .controls label { font-size: 1rem; font-weight: 500; color: #4a5568; }
     .controls input { padding: 0.75rem; font-size: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; width: 140px; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
-    .controls input:focus { outline: none; border Patricecolor: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
+    .controls input:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
     .controls button { background: #3182ce; color: #ffffff; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
     .controls button:hover { background: #2b6cb0; }
     .chart-container { background: #ffffff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
@@ -146,8 +146,33 @@
     // Global array to store heatmap data points
     let heatDataPoints = [];
 
-    // IDW Interpolation Function
+    // Haversine Distance Function (returns distance in meters)
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000; // Earth radius in meters
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c; // Distance in meters
+    }
+
+    // IDW Interpolation Function with 70-meter limit
     function interpolateIDW(lat, lon, points, power = 2, maxDistance = 0.01, maxPoints = 10) {
+      // Check if any point is within 70 meters
+      let hasPointWithin70m = false;
+      for (const point of points) {
+        const distance = haversineDistance(lat, lon, point.lat, point.lon);
+        if (distance <= 70) {
+          hasPointWithin70m = true;
+          break;
+        }
+      }
+      if (!hasPointWithin70m) {
+        return null; // No points within 70 meters, skip interpolation
+      }
+
       // Find k-nearest points to improve performance
       const distances = points.map(point => ({
         point,
@@ -317,7 +342,7 @@
     let heatMinValue = 0;
     let heatMaxValue = 10;
 
-    // Updated Heatmap Click Handler with IDW
+    // Updated Heatmap Click Handler with IDW and 70-meter limit
     heatMap.on('click', function(e) {
       const clickedLat = e.latlng.lat;
       const clickedLon = e.latlng.lng;
@@ -330,9 +355,7 @@
       let closestPoint = null;
 
       heatDataPoints.forEach(point => {
-        const distance = Math.sqrt(
-          Math.pow(clickedLat - point.lat, 2) + Math.pow(clickedLon - point.lon, 2)
-        );
+        const distance = haversineDistance(clickedLat, clickedLon, point.lat, point.lon);
         if (distance < minDist) {
           minDist = distance;
           closestPoint = point;
@@ -348,7 +371,7 @@
         popupContent += `${popupContent ? '<br>' : ''}Nearest radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>Time: ${closestPoint.time}`;
       }
       if (!popupContent) {
-        popupContent = 'No data points within range.';
+        popupContent = 'No radiation data found';
       }
 
       L.popup()
