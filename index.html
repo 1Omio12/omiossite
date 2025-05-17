@@ -256,9 +256,9 @@
       L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
         e.preventDefault();
         if (circleLatestValidFeed) {
-          const lat = parseFloat(circleLatestValidFeed.field4);
-          const lon = parseFloat(circleLatestValidFeed.field5);
-          const val = parseFloat(circleLatestValidFeed.field3);
+          const lat = parseFloat(circleLatestValidFeed.field3);
+          const lon = parseFloat(circleLatestValidFeed.field4);
+          const val = parseFloat(circleLatestValidFeed.field2);
           const time = circleLatestValidFeed.created_at;
 
           const customIcon = L.icon({
@@ -427,9 +427,9 @@
       L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
         e.preventDefault();
         if (heatLatestValidFeed) {
-          const lat = parseFloat(heatLatestValidFeed.field4);
-          const lon = parseFloat(heatLatestValidFeed.field5);
-          const val = parseFloat(heatLatestValidFeed.field3);
+          const lat = parseFloat(heatLatestValidFeed.field3);
+          const lon = parseFloat(heatLatestValidFeed.field4);
+          const val = parseFloat(heatLatestValidFeed.field2);
           const time = heatLatestValidFeed.created_at;
 
           const customIcon = L.icon({
@@ -533,9 +533,9 @@
           e.preventDefault();
           const latestFeed = isCircle ? circleLatestValidFeed : heatLatestValidFeed;
           if (latestFeed) {
-            const lat = parseFloat(latestFeed.field4);
-            const lon = parseFloat(latestFeed.field5);
-            const val = parseFloat(latestFeed.field3);
+            const lat = parseFloat(latestFeed.field3);
+            const lon = parseFloat(latestFeed.field4);
+            const val = parseFloat(latestFeed.field2);
             const time = latestFeed.created_at;
 
             const customIcon = L.icon({
@@ -611,9 +611,9 @@
               return; // Skip if outside time range
             }
 
-            const lat = parseFloat(feed.field4);
-            const lon = parseFloat(feed.field5);
-            const val = parseFloat(feed.field3);
+            const lat = parseFloat(feed.field3);
+            const lon = parseFloat(feed.field4);
+            const val = parseFloat(feed.field2);
             const time = feed.created_at;
 
             if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
@@ -642,7 +642,7 @@
           });
 
           const latest = data.feeds[data.feeds.length - 1];
-          const latestVal = parseFloat(latest?.field3);
+          const latestVal = parseFloat(latest?.field2);
           document.getElementById('detector-display').textContent = isNaN(latestVal) ? 'N/A µSv/h' : `${latestVal.toFixed(3)} µSv/h`;
           document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal, minVal, maxVal));
 
@@ -659,7 +659,7 @@
         })
         .catch(console.error)
         .finally(() => {
-          const latestVal = parseFloat(circleLatestValidFeed?.field3);
+          const latestVal = parseFloat(circleLatestValidFeed?.field2);
           document.getElementById('detector-light').setAttribute('fill', isNaN(latestVal) ? '#edf2f7' : getColor(latestVal, minVal, maxVal));
         });
     }
@@ -691,9 +691,9 @@
               return; // Skip if outside time range
             }
 
-            const lat = parseFloat(feed.field4);
-            const lon = parseFloat(feed.field5);
-            const val = parseFloat(feed.field3);
+            const lat = parseFloat(feed.field3);
+            const lon = parseFloat(feed.field4);
+            const val = parseFloat(feed.field2);
             const time = feed.created_at;
 
             if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
