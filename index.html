@@ -34,9 +34,18 @@
     .legend button { background: #3182ce; color: #ffffff; width: 100%; padding: 0.75rem; margin-top: 1rem; border-radius: 0.5rem; border: none; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
     .legend button:hover { background: #2b6cb0; }
     .gradient-container { display: flex; align-items: center; margin-bottom: 1rem; }
-    .gradient-bar { width: 20px; height: 150px; border-radius: 5px; margin-right: 0.75rem; }
+    .gradient-bar { width: 20px; height: 150px; border-radius: 5px; margin-right: 1rem; }
     .gradient-labels { position: relative; height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
-    .gradient-label { position: absolute; font-size: 0.875rem; color: #4a5568; transform: translateY(-50%); }
+    .gradient-label { 
+      position: absolute; 
+      font-size: 0.9rem; 
+      font-weight: 500; 
+      color: #2d3748; 
+      transform: translateY(-50%); 
+      left: 0; 
+      padding-left: 0.25rem; 
+      white-space: nowrap; 
+    }
     #detector-container { margin: 2rem auto; width: 300px; height: 600px; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
     #detector-svg { width: 100%; height: 100%; }
     .detector-body { fill: #edf2f7; stroke: #4a5568; stroke-width: 2; }
@@ -222,23 +231,19 @@
           <div class="legend" id="circle-legend-content">
             <div class="legend-item">
               <i style="background:#3b82f6"></i>
-              <span>${circleMinValue.toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.2).toFixed(1)} µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#06b6d4"></i>
-              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.2).toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.4).toFixed(1)} µSv/h</span>
+              <span>${circleMinValue.toFixed(1)} to 1.0 µSv/h</span>
             </div>
             <div class="legend-item">
               <i style="background:#22c55e"></i>
-              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.4).toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.6).toFixed(1)} µSv/h</span>
+              <span>1.0 to 2.0 µSv/h</span>
             </div>
             <div class="legend-item">
               <i style="background:#facc15"></i>
-              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.6).toFixed(1)} to ${(circleMinValue + (circleMaxValue - circleMinValue) * 0.8).toFixed(1)} µSv/h</span>
+              <span>2.0 to 3.0 µSv/h</span>
             </div>
             <div class="legend-item">
               <i style="background:#ef4444"></i>
-              <span>${(circleMinValue + (circleMaxValue - circleMinValue) * 0.8).toFixed(1)} to ${circleMaxValue.toFixed(1)} µSv/h</span>
+              <span>3.0 to ${circleMaxValue.toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
               <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
@@ -333,11 +338,10 @@
       minOpacity: 0.4,
       maxZoom: 17,
       gradient: {
-        0.0: '#3b82f6',  // Blue
-        0.2: '#06b6d4',  // Cyan
-        0.4: '#22c55e',  // Green
-        0.6: '#facc15',  // Yellow
-        1.0: '#ef4444'   // Red
+        0.0: '#3b82f6',  // Blue (0 to 1)
+        0.333: '#22c55e', // Green (1 to 2)
+        0.666: '#facc15', // Yellow (2 to 3)
+        1.0: '#ef4444'   // Red (3 to upper)
       }
     }).addTo(heatMap);
 
@@ -400,12 +404,12 @@
         <div class="legend-content legend-open">
           <div class="legend" id="heat-legend-content">
             <div class="gradient-container">
-              <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #06b6d4, #3b82f6);"></div>
+              <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #3b82f6);"></div>
               <div class="gradient-labels">
                 <span class="gradient-label" style="top: 0%;">${heatMaxValue.toFixed(1)} µSv/h</span>
-                <span class="gradient-label" style="top: 25%;">${(heatMinValue + (heatMaxValue - heatMinValue) * 0.75).toFixed(1)}</span>
-                <span class="gradient-label" style="top: 50%;">${(heatMinValue + (heatMaxValue - heatMinValue) * 0.5).toFixed(1)}</span>
-                <span class="gradient-label" style="top: 75%;">${(heatMinValue + (heatMaxValue - heatMinValue) * 0.25).toFixed(1)}</span>
+                <span class="gradient-label" style="top: 25%;">3.0 µSv/h</span>
+                <span class="gradient-label" style="top: 50%;">2.0 µSv/h</span>
+                <span class="gradient-label" style="top: 75%;">1.0 µSv/h</span>
                 <span class="gradient-label" style="bottom: 0%;">${heatMinValue.toFixed(1)} µSv/h</span>
               </div>
             </div>
@@ -486,39 +490,32 @@
     });
 
     function getColor(value, minVal, maxVal) {
-      const normalized = (value - minVal) / (maxVal - minVal);
-      if (normalized <= 0.2) return '#3b82f6';  // Blue
-      if (normalized <= 0.4) return '#06b6d4';  // Cyan
-      if (normalized <= 0.6) return '#22c55e';  // Green
-      if (normalized <= 0.8) return '#facc15';  // Yellow
-      return '#ef4444';                         // Red
+      if (value < 1) return '#3b82f6';  // Blue (0 to 1)
+      if (value < 2) return '#22c55e';  // Green (1 to 2)
+      if (value < 3) return '#facc15';  // Yellow (2 to 3)
+      return '#ef4444';                 // Red (3 to upper)
     }
 
     function updateLegend(minVal, maxVal, isCircle) {
       const legendContent = document.getElementById(`${isCircle ? 'circle' : 'heat'}-legend-content`);
       if (legendContent) {
         if (isCircle) {
-          const colors = ['#3b82f6', '#06b6d4', '#22c55e', '#facc15', '#ef4444'];
           legendContent.innerHTML = `
             <div class="legend-item">
-              <i style="background:${colors[0]}"></i>
-              <span>${minVal.toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} µSv/h</span>
+              <i style="background:#3b82f6"></i>
+              <span>${minVal.toFixed(1)} to 1.0 µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:${colors[1]}"></i>
-              <span>${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} µSv/h</span>
+              <i style="background:#22c55e"></i>
+              <span>1.0 to 2.0 µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:${colors[2]}"></i>
-              <span>${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} µSv/h</span>
+              <i style="background:#facc15"></i>
+              <span>2.0 to 3.0 µSv/h</span>
             </div>
             <div class="legend-item">
-              <i style="background:${colors[3]}"></i>
-              <span>${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:${colors[4]}"></i>
-              <span>${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} to ${maxVal.toFixed(1)} µSv/h</span>
+              <i style="background:#ef4444"></i>
+              <span>3.0 to ${maxVal.toFixed(1)} µSv/h</span>
             </div>
             <div class="legend-item">
               <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
@@ -529,12 +526,12 @@
         } else {
           legendContent.innerHTML = `
             <div class="gradient-container">
-              <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #06b6d4, #3b82f6);"></div>
+              <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #3b82f6);"></div>
               <div class="gradient-labels">
                 <span class="gradient-label" style="top: 0%;">${maxVal.toFixed(1)} µSv/h</span>
-                <span class="gradient-label" style="top: 25%;">${(minVal + (maxVal - minVal) * 0.75).toFixed(1)}</span>
-                <span class="gradient-label" style="top: 50%;">${(minVal + (maxVal - minVal) * 0.5).toFixed(1)}</span>
-                <span class="gradient-label" style="top: 75%;">${(minVal + (maxVal - minVal) * 0.25).toFixed(1)}</span>
+                <span class="gradient-label" style="top: 25%;">3.0 µSv/h</span>
+                <span class="gradient-label" style="top: 50%;">2.0 µSv/h</span>
+                <span class="gradient-label" style="top: 75%;">1.0 µSv/h</span>
                 <span class="gradient-label" style="bottom: 0%;">${minVal.toFixed(1)} µSv/h</span>
               </div>
             </div>
@@ -723,7 +720,7 @@
               if (!isNaN(val) && val >= minVal && val <= maxVal) {
                 times.push(time);
                 values.push(val);
-                const intensity = (val - minVal) / (maxVal - minVal); // Normalize to 0-1
+                const intensity = Math.min(1, (val - minVal) / (maxVal - minVal)); // Normalize to 0-1
                 heatPoints.push([lat, lon, intensity]);
                 heatDataPoints.push({ 
                   lat, 
