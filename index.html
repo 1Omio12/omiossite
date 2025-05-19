@@ -256,8 +256,8 @@
       L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
         e.preventDefault();
         if (circleLatestValidFeed) {
-          const lat = parseFloat(circleLatestValidFeed.field3);
-          const lon = parseFloat(circleLatestValidFeed.field4);
+          const lat = parseFloat(circleLatestValidFeed.field4);
+          const lon = parseFloat(circleLatestValidFeed.field5);
           const val = parseFloat(circleLatestValidFeed.field2);
           const time = circleLatestValidFeed.created_at;
 
@@ -365,10 +365,19 @@
       // Prepare popup content
       let popupContent = '';
       if (interpolatedValue !== null) {
-        popupContent += `Interpolated radiation: ${interpolatedValue.toFixed(3)} µSv/h`;
+        popupContent += `Interpolated Radiation: ${interpolatedValue.toFixed(3)} µSv/h`;
       }
       if (closestPoint) {
-        popupContent += `${popupContent ? '<br>' : ''}Nearest radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>Time: ${closestPoint.time}`;
+        popupContent += `${popupContent ? '<br>' : ''}Nearest Data Point:<br>` +
+                       `CPM: ${closestPoint.cpm !== null ? closestPoint.cpm.toFixed(2) : 'N/A'}<br>` +
+                       `Radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>` +
+                       `Altitude: ${closestPoint.altitude !== null ? closestPoint.altitude.toFixed(2) : 'N/A'} m<br>` +
+                       `Latitude: ${closestPoint.lat.toFixed(6)}°<br>` +
+                       `Longitude: ${closestPoint.lon.toFixed(6)}°<br>` +
+                       `Temperature: ${closestPoint.temperature !== null ? closestPoint.temperature.toFixed(2) : 'N/A'} °C<br>` +
+                       `Pressure: ${closestPoint.pressure !== null ? closestPoint.pressure.toFixed(2) : 'N/A'} hPa<br>` +
+                       `Humidity: ${closestPoint.humidity !== null ? closestPoint.humidity.toFixed(2) : 'N/A'} %<br>` +
+                       `Time: ${closestPoint.time}`;
       }
       if (!popupContent) {
         popupContent = 'No radiation data found';
@@ -427,8 +436,8 @@
       L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
         e.preventDefault();
         if (heatLatestValidFeed) {
-          const lat = parseFloat(heatLatestValidFeed.field3);
-          const lon = parseFloat(heatLatestValidFeed.field4);
+          const lat = parseFloat(heatLatestValidFeed.field4);
+          const lon = parseFloat(heatLatestValidFeed.field5);
           const val = parseFloat(heatLatestValidFeed.field2);
           const time = heatLatestValidFeed.created_at;
 
@@ -533,8 +542,8 @@
           e.preventDefault();
           const latestFeed = isCircle ? circleLatestValidFeed : heatLatestValidFeed;
           if (latestFeed) {
-            const lat = parseFloat(latestFeed.field3);
-            const lon = parseFloat(latestFeed.field4);
+            const lat = parseFloat(latestFeed.field4);
+            const lon = parseFloat(latestFeed.field5);
             const val = parseFloat(latestFeed.field2);
             const time = latestFeed.created_at;
 
@@ -611,8 +620,8 @@
               return; // Skip if outside time range
             }
 
-            const lat = parseFloat(feed.field3);
-            const lon = parseFloat(feed.field4);
+            const lat = parseFloat(feed.field4);
+            const lon = parseFloat(feed.field5);
             const val = parseFloat(feed.field2);
             const time = feed.created_at;
 
@@ -691,9 +700,14 @@
               return; // Skip if outside time range
             }
 
-            const lat = parseFloat(feed.field3);
-            const lon = parseFloat(feed.field4);
+            const lat = parseFloat(feed.field4);
+            const lon = parseFloat(feed.field5);
             const val = parseFloat(feed.field2);
+            const cpm = parseFloat(feed.field1);
+            const altitude = parseFloat(feed.field3);
+            const temperature = parseFloat(feed.field6);
+            const pressure = parseFloat(feed.field7);
+            const humidity = parseFloat(feed.field8);
             const time = feed.created_at;
 
             if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
@@ -702,7 +716,17 @@
                 values.push(val);
                 const intensity = (val - minVal) / (maxVal - minVal); // Normalize to 0-1
                 heatPoints.push([lat, lon, intensity]);
-                heatDataPoints.push({ lat, lon, val, time }); // Store data point
+                heatDataPoints.push({ 
+                  lat, 
+                  lon, 
+                  val, 
+                  cpm: isNaN(cpm) ? null : cpm, 
+                  altitude: isNaN(altitude) ? null : altitude, 
+                  temperature: isNaN(temperature) ? null : temperature, 
+                  pressure: isNaN(pressure) ? null : pressure, 
+                  humidity: isNaN(humidity) ? null : humidity, 
+                  time 
+                }); // Store data point
               }
 
               sumLat += lat;
