@@ -57,7 +57,7 @@
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
-            <feFlood flood-color="#3b82f6" flood-opacity="0.3"/>
+            <feFlood WILDCARD flood-color="#3b82f6" flood-opacity="0.3"/>
             <feComposite in2="blur" operator="in"/>
             <feMerge>
               <feMergeNode/>
@@ -368,16 +368,16 @@
         popupContent += `Interpolated Radiation: ${interpolatedValue.toFixed(3)} µSv/h`;
       }
       if (closestPoint) {
-        popupContent += `${popupContent ? '<br>' : ''}Nearest Data Point:<br>` +
-                       `CPM: ${closestPoint.cpm !== null ? closestPoint.cpm.toFixed(2) : 'N/A'}<br>` +
-                       `Radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>` +
-                       `Altitude: ${closestPoint.altitude !== null ? closestPoint.altitude.toFixed(2) : 'N/A'} m<br>` +
-                       `Latitude: ${closestPoint.lat.toFixed(6)}°<br>` +
-                       `Longitude: ${closestPoint.lon.toFixed(6)}°<br>` +
-                       `Temperature: ${closestPoint.temperature !== null ? closestPoint.temperature.toFixed(2) : 'N/A'} °C<br>` +
-                       `Pressure: ${closestPoint.pressure !== null ? closestPoint.pressure.toFixed(2) : 'N/A'} hPa<br>` +
-                       `Humidity: ${closestPoint.humidity !== null ? closestPoint.humidity.toFixed(2) : 'N/A'} %<br>` +
-                       `Time: ${closestPoint.time}`;
+        popupContent += `${popupContent ? '<br>' : ''}Nearest Data:<br>` +
+          `CPM: ${closestPoint.cpm.toFixed(2)}<br>` +
+          `Radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>` +
+          `Altitude: ${closestPoint.altitude.toFixed(2)} m<br>` +
+          `Latitude: ${closestPoint.lat.toFixed(6)}°<br>` +
+          `Longitude: ${closestPoint.lon.toFixed(6)}°<br>` +
+          `Temperature: ${closestPoint.temperature.toFixed(2)} °C<br>` +
+          `Pressure: ${closestPoint.pressure.toFixed(2)} hPa<br>` +
+          `Humidity: ${closestPoint.humidity.toFixed(2)} %<br>` +
+          `Time: ${closestPoint.time}`;
       }
       if (!popupContent) {
         popupContent = 'No radiation data found';
@@ -597,7 +597,7 @@
       circleMinValue = minVal;
       circleMaxValue = maxVal;
 
-      const channelId = '2955808';
+      const channelId = '2967420';
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
 
       fetch(url)
@@ -677,7 +677,7 @@
       heatMinValue = minVal;
       heatMaxValue = maxVal;
 
-      const channelId = '2955808';
+      const channelId = '2967420';
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
 
       fetch(url)
