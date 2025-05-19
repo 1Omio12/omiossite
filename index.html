@@ -33,6 +33,10 @@
     .legend img { width: 16px; height: 16px; margin-right: 0.75rem; vertical-align: middle; }
     .legend button { background: #3182ce; color: #ffffff; width: 100%; padding: 0.75rem; margin-top: 1rem; border-radius: 0.5rem; border: none; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
     .legend button:hover { background: #2b6cb0; }
+    .gradient-container { display: flex; align-items: center; margin-bottom: 1rem; }
+    .gradient-bar { width: 20px; height: 150px; border-radius: 5px; margin-right: 0.75rem; }
+    .gradient-labels { position: relative; height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
+    .gradient-label { position: absolute; font-size: 0.875rem; color: #4a5568; transform: translateY(-50%); }
     #detector-container { margin: 2rem auto; width: 300px; height: 600px; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
     #detector-svg { width: 100%; height: 100%; }
     .detector-body { fill: #edf2f7; stroke: #4a5568; stroke-width: 2; }
@@ -57,7 +61,7 @@
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
-            <feFlood WILDCARD flood-color="#3b82f6" flood-opacity="0.3"/>
+            <feFlood flood-color="#3b82f6" flood-opacity="0.3"/>
             <feComposite in2="blur" operator="in"/>
             <feMerge>
               <feMergeNode/>
@@ -333,7 +337,7 @@
         0.2: '#06b6d4',  // Cyan
         0.4: '#22c55e',  // Green
         0.6: '#facc15',  // Yellow
-        1.0: '#f10f05'   // Red
+        1.0: '#ef4444'   // Red
       }
     }).addTo(heatMap);
 
@@ -393,28 +397,17 @@
     heatLegend.onAdd = function () {
       const div = L.DomUtil.create('div', 'legend-container');
       div.innerHTML = `
-        <button class="legend-toggle">Toggle Legend</button>
-        <div class="legend-content">
+        <div class="legend-content legend-open">
           <div class="legend" id="heat-legend-content">
-            <div class="legend-item">
-              <i style="background:#3b82f6"></i>
-              <span>${heatMinValue.toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.2).toFixed(1)} µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#06b6d4"></i>
-              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.2).toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.4).toFixed(1)} µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#22c55e"></i>
-              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.4).toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.6).toFixed(1)} µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#facc15"></i>
-              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.6).toFixed(1)} to ${(heatMinValue + (heatMaxValue - heatMinValue) * 0.8).toFixed(1)} µSv/h</span>
-            </div>
-            <div class="legend-item">
-              <i style="background:#ef4444"></i>
-              <span>${(heatMinValue + (heatMaxValue - heatMinValue) * 0.8).toFixed(1)} to ${heatMaxValue.toFixed(1)} µSv/h</span>
+            <div class="gradient-container">
+              <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #06b6d4, #3b82f6);"></div>
+              <div class="gradient-labels">
+                <span class="gradient-label" style="top: 0%;">${heatMaxValue.toFixed(1)} µSv/h</span>
+                <span class="gradient-label" style="top: 25%;">${(heatMinValue + (heatMaxValue - heatMinValue) * 0.75).toFixed(1)}</span>
+                <span class="gradient-label" style="top: 50%;">${(heatMinValue + (heatMaxValue - heatMinValue) * 0.5).toFixed(1)}</span>
+                <span class="gradient-label" style="top: 75%;">${(heatMinValue + (heatMaxValue - heatMinValue) * 0.25).toFixed(1)}</span>
+                <span class="gradient-label" style="bottom: 0%;">${heatMinValue.toFixed(1)} µSv/h</span>
+              </div>
             </div>
             <div class="legend-item">
               <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
@@ -424,14 +417,8 @@
           </div>
         </div>
       `;
-      const toggleButton = div.querySelector('.legend-toggle');
-      const showLatestButton = div.querySelector('#heat-show-latest-location');
 
-      L.DomEvent.on(toggleButton, 'click touchstart', function (e) {
-        e.preventDefault();
-        const content = div.querySelector('.legend-content');
-        content.classList.toggle('legend-open');
-      });
+      const showLatestButton = div.querySelector('#heat-show-latest-location');
 
       L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
         e.preventDefault();
@@ -457,6 +444,7 @@
           alert('No valid latest location available.');
         }
       });
+
       return div;
     };
     heatLegend.addTo(heatMap);
@@ -509,34 +497,55 @@
     function updateLegend(minVal, maxVal, isCircle) {
       const legendContent = document.getElementById(`${isCircle ? 'circle' : 'heat'}-legend-content`);
       if (legendContent) {
-        const colors = ['#3b82f6', '#06b6d4', '#22c55e', '#facc15', '#ef4444'];
-        legendContent.innerHTML = `
-          <div class="legend-item">
-            <i style="background:${colors[0]}"></i>
-            <span>${minVal.toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} µSv/h</span>
-          </div>
-          <div class="legend-item">
-            <i style="background:${colors[1]}"></i>
-            <span>${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} µSv/h</span>
-          </div>
-          <div class="legend-item">
-            <i style="background:${colors[2]}"></i>
-            <span>${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} µSv/h</span>
-          </div>
-          <div class="legend-item">
-            <i style="background:${colors[3]}"></i>
-            <span>${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} µSv/h</span>
-          </div>
-          <div class="legend-item">
-            <i style="background:${colors[4]}"></i>
-            <span>${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} to ${maxVal.toFixed(1)} µSv/h</span>
-          </div>
-          <div class="legend-item">
-            <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
-            <span>Latest Location</span>
-          </div>
-          <button id="${isCircle ? 'circle' : 'heat'}-show-latest-location">Show Latest Location</button>
-        `;
+        if (isCircle) {
+          const colors = ['#3b82f6', '#06b6d4', '#22c55e', '#facc15', '#ef4444'];
+          legendContent.innerHTML = `
+            <div class="legend-item">
+              <i style="background:${colors[0]}"></i>
+              <span>${minVal.toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:${colors[1]}"></i>
+              <span>${(minVal + (maxVal - minVal) * 0.2).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:${colors[2]}"></i>
+              <span>${(minVal + (maxVal - minVal) * 0.4).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:${colors[3]}"></i>
+              <span>${(minVal + (maxVal - minVal) * 0.6).toFixed(1)} to ${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <i style="background:${colors[4]}"></i>
+              <span>${(minVal + (maxVal - minVal) * 0.8).toFixed(1)} to ${maxVal.toFixed(1)} µSv/h</span>
+            </div>
+            <div class="legend-item">
+              <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
+              <span>Latest Location</span>
+            </div>
+            <button id="${isCircle ? 'circle' : 'heat'}-show-latest-location">Show Latest Location</button>
+          `;
+        } else {
+          legendContent.innerHTML = `
+            <div class="gradient-container">
+              <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #06b6d4, #3b82f6);"></div>
+              <div class="gradient-labels">
+                <span class="gradient-label" style="top: 0%;">${maxVal.toFixed(1)} µSv/h</span>
+                <span class="gradient-label" style="top: 25%;">${(minVal + (maxVal - minVal) * 0.75).toFixed(1)}</span>
+                <span class="gradient-label" style="top: 50%;">${(minVal + (maxVal - minVal) * 0.5).toFixed(1)}</span>
+                <span class="gradient-label" style="top: 75%;">${(minVal + (maxVal - minVal) * 0.25).toFixed(1)}</span>
+                <span class="gradient-label" style="bottom: 0%;">${minVal.toFixed(1)} µSv/h</span>
+              </div>
+            </div>
+            <div class="legend-item">
+              <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" />
+              <span>Latest Location</span>
+            </div>
+            <button id="heat-show-latest-location">Show Latest Location</button>
+          `;
+        }
+
         const showLatestButton = legendContent.querySelector(`#${isCircle ? 'circle' : 'heat'}-show-latest-location`);
         L.DomEvent.on(showLatestButton, 'click touchstart', function (e) {
           e.preventDefault();
