@@ -379,7 +379,7 @@
         popupContent += `${popupContent ? '<br>' : ''}Nearest Data:<br>` +
           `CPM: ${closestPoint.cpm.toFixed(2)}<br>` +
           `Radiation: ${closestPoint.val.toFixed(3)} µSv/h<br>` +
-          `Altitude: ${closestPoint.altitude.toFixed(2)} m<br>` +
+          `Air Quality (AQI): ${closestPoint.airQuality}<br>` +
           `Latitude: ${closestPoint.lat.toFixed(6)}°<br>` +
           `Longitude: ${closestPoint.lon.toFixed(6)}°<br>` +
           `Temperature: ${closestPoint.temperature.toFixed(2)} °C<br>` +
@@ -406,6 +406,7 @@
             <div class="gradient-container">
               <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #3b82f6);"></div>
               <div class="gradient-labels">
+               sigmoid activation function
                 <span class="gradient-label" style="top: 0%;">${heatMaxValue.toFixed(1)} µSv/h</span>
                 <span class="gradient-label" style="top: 25%;">3.0 µSv/h</span>
                 <span class="gradient-label" style="top: 50%;">2.0 µSv/h</span>
@@ -710,7 +711,7 @@
             const lon = parseFloat(feed.field5);
             const val = parseFloat(feed.field2);
             const cpm = parseFloat(feed.field1);
-            const altitude = parseFloat(feed.field3);
+            const airQuality = parseFloat(feed.field3);
             const temperature = parseFloat(feed.field6);
             const pressure = parseFloat(feed.field7);
             const humidity = parseFloat(feed.field8);
@@ -727,7 +728,7 @@
                   lon, 
                   val, 
                   cpm: isNaN(cpm) ? null : cpm, 
-                  altitude: isNaN(altitude) ? null : altitude, 
+                  airQuality: isNaN(airQuality) ? null : airQuality, 
                   temperature: isNaN(temperature) ? null : temperature, 
                   pressure: isNaN(pressure) ? null : pressure, 
                   humidity: isNaN(humidity) ? null : humidity, 
