@@ -406,7 +406,6 @@
             <div class="gradient-container">
               <div class="gradient-bar" style="background: linear-gradient(to bottom, #ef4444, #facc15, #22c55e, #3b82f6);"></div>
               <div class="gradient-labels">
-               sigmoid activation function
                 <span class="gradient-label" style="top: 0%;">${heatMaxValue.toFixed(1)} µSv/h</span>
                 <span class="gradient-label" style="top: 25%;">3.0 µSv/h</span>
                 <span class="gradient-label" style="top: 50%;">2.0 µSv/h</span>
@@ -691,7 +690,7 @@
         .then(res => res.json())
         .then(data => {
           data.feeds.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-          const heatPoints = [];
+          const locationMaxVals = {};
           const times = [];
           const values = [];
           let sumLat = 0, sumLon = 0, count = 0;
@@ -719,10 +718,14 @@
 
             if (!isNaN(lat) && !isNaN(lon) && lat >= 20.5 && lat <= 26.7 && lon >= 88 && lon <= 92.7) {
               if (!isNaN(val) && val >= minVal && val <= maxVal) {
-                times.push(time);
-                values.push(val);
-                const intensity = Math.min(1, (val - minVal) / (maxVal - minVal)); // Normalize to 0-1
-                heatPoints.push([lat, lon, intensity]);
+                const key = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+                if (!locationMaxVals[key]) {
+                  locationMaxVals[key] = { lat, lon, maxVal: val };
+                } else {
+                  if (val > locationMaxVals[key].maxVal) {
+                    locationMaxVals[key].maxVal = val;
+                  }
+                }
                 heatDataPoints.push({ 
                   lat, 
                   lon, 
@@ -733,7 +736,9 @@
                   pressure: isNaN(pressure) ? null : pressure, 
                   humidity: isNaN(humidity) ? null : humidity, 
                   time 
-                }); // Store data point
+                });
+                times.push(time);
+                values.push(val);
               }
 
               sumLat += lat;
@@ -745,6 +750,14 @@
               }
             }
           });
+
+          // Create heatPoints from aggregated maximum values
+          const heatPoints = [];
+          for (const key in locationMaxVals) {
+            const { lat, lon, maxVal: maxValAtLocation } = locationMaxVals[key];
+            const intensity = (maxValAtLocation - minVal) / (maxVal - minVal);
+            heatPoints.push([lat, lon, intensity]);
+          }
 
           heatLayer.setLatLngs(heatPoints);
 
