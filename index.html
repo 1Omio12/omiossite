@@ -20,7 +20,8 @@
     .controls button { background: #3182ce; color: #ffffff; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
     .controls button:hover { background: #2b6cb0; }
     .chart-container { background: #ffffff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
-    #circle-map, #heat-map { height: 600px; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
+    #circle-map, #heat-map { height: 600px; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; position: relative; }
+    .map-container { position: relative; margin: 0 40px 2rem 40px; }
     .info { font-size: 0.875rem; color: #718096; text-align: center; }
     .legend { background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; color: #4a5568; width: 100%; max-width: 250px; }
     .legend-container { background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
@@ -55,6 +56,7 @@
     .detector-text { font-family: 'Courier New', Courier, monospace; font-size: 12px; fill: #2d3748; text-anchor: middle; dominant-baseline: middle; }
     .detector-light { fill: #edf2f7; transition: fill 0.3s ease; }
     .footer { text-align: center; font-size: 0.875rem; color: #718096; padding: 1rem 0; margin-top: auto; }
+    .coordinate-control { background: #ffffff; padding: 0.5rem; border-radius: 0.25rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); font-size: 0.875rem; color: #2d3748; }
   </style>
 </head>
 <body>
@@ -114,7 +116,9 @@
     </div>
 
     <h2>Radiation Mapping Dashboard (Circle Markers)</h2>
-    <div id="circle-map"></div>
+    <div class="map-container">
+      <div id="circle-map"></div>
+    </div>
     <p class="info">Circle map updates automatically every 5 seconds unless time range is set.</p>
 
     <!-- Heatmap Section -->
@@ -142,7 +146,9 @@
     </div>
 
     <h2>Radiation Heatmap Dashboard</h2>
-    <div id="heat-map"></div>
+    <div class="map-container">
+      <div id="heat-map"></div>
+    </div>
     <p class="info">Heatmap updates automatically every 5 seconds unless time range is set.</p>
   </div>
 
@@ -210,11 +216,105 @@
       return sumValue / sumWeight;
     }
 
+    // Grid Layer for Maps with Labels
+    L.GridLayer.Grid = L.GridLayer.extend({
+      createTile: function(coords) {
+        const tile = document.createElement('canvas');
+        const tileSize = this.getTileSize();
+        const labelOffset = 40; // Extra space for labels
+        tile.setAttribute('width', tileSize.x + labelOffset);
+        tile.setAttribute('height', tileSize.y + labelOffset);
+        const ctx = tile.getContext('2d');
+
+        // Calculate the lat/lng bounds of the tile
+        const bounds = this._tileCoordsToBounds(coords);
+        const nw = this._map.project(bounds.getNorthWest(), coords.z);
+        const se = this._map.project(bounds.getSouthEast(), coords.z);
+        const tileWidth = tileSize.x;
+        const tileHeight = tileSize.y;
+
+        // Draw grid lines
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 0.5;
+        ctx.setLineDash([2, 4]);
+
+        // Draw latitude lines (vertical) and labels on top
+        ctx.font = '14px Roboto';
+        ctx.fillStyle = '#2d3748';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        const latStep = 0.002; // Grid spacing
+        let lat = Math.floor(bounds.getSouth() / latStep) * latStep;
+        let latLabelCounter = 0;
+        while (lat <= bounds.getNorth()) {
+          const point = this._map.project([lat, bounds.getWest()], coords.z);
+          const x = (point.x - nw.x) * tileWidth / (se.x - nw.x);
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, tileHeight);
+          ctx.stroke();
+          // Draw latitude label on the top every second line
+          if (x >= 0 && x <= tileWidth && latLabelCounter % 2 === 0) {
+            ctx.fillText(`${lat.toFixed(3)}°`, x, 5);
+          }
+          lat += latStep;
+          latLabelCounter++;
+        }
+
+        // Draw longitude lines (horizontal) and labels on top
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const lngStep = 0.002; // Grid spacing
+        let lng = Math.floor(bounds.getWest() / lngStep) * lngStep;
+        let lngLabelCounter = 0;
+        while (lng <= bounds.getEast()) {
+          const point = this._map.project([bounds.getNorth(), lng], coords.z);
+          const y = (point.y - nw.y) * tileHeight / (se.y - nw.y);
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(tileWidth, y);
+          ctx.stroke();
+          // Draw longitude label on the top every second line
+          if (y >= 0 && y <= tileHeight && lngLabelCounter % 2 === 0) {
+            ctx.fillText(`${lng.toFixed(3)}°`, tileWidth / 2, 5);
+          }
+          lng += lngStep;
+          lngLabelCounter++;
+        }
+
+        return tile;
+      }
+    });
+
+    L.gridLayer.grid = function(opts) {
+      return new L.GridLayer.Grid(opts);
+    };
+
     // Circle Marker Map Setup
-    const circleMap = L.map('circle-map').setView([23.685, 90.3563], 7);
+    const circleMap = L.map('circle-map', {
+      renderer: L.canvas(),
+      padding: [40, 40]
+    }).setView([23.685, 90.3563], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(circleMap);
+
+    // Add grid layer to Circle Map
+    L.gridLayer.grid().addTo(circleMap);
+
+    // Coordinate control for Circle Map
+    const circleCoordControl = L.control({position: 'bottomleft'});
+    circleCoordControl.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'coordinate-control');
+      div.innerHTML = 'Lat: 0.000000, Lng: 0.000000';
+      return div;
+    };
+    circleCoordControl.addTo(circleMap);
+
+    circleMap.on('mousemove', function(e) {
+      const div = circleMap.getContainer().querySelector('.coordinate-control');
+      div.innerHTML = `Lat: ${e.latlng.lat.toFixed(6)}, Lng: ${e.latlng.lng.toFixed(6)}`;
+    });
 
     const circleMarkers = L.layerGroup().addTo(circleMap);
     let circleLatestValidFeed = null;
@@ -327,10 +427,30 @@
     });
 
     // Heatmap Setup
-    const heatMap = L.map('heat-map').setView([23.685, 90.3563], 7);
+    const heatMap = L.map('heat-map', {
+      renderer: L.canvas(),
+      padding: [40, 40]
+    }).setView([23.685, 90.3563], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(heatMap);
+
+    // Add grid layer to Heatmap
+    L.gridLayer.grid().addTo(heatMap);
+
+    // Coordinate control for Heatmap
+    const heatCoordControl = L.control({position: 'bottomleft'});
+    heatCoordControl.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'coordinate-control');
+      div.innerHTML = 'Lat: 0.000000, Lng: 0.000000';
+      return div;
+    };
+    heatCoordControl.addTo(heatMap);
+
+    heatMap.on('mousemove', function(e) {
+      const div = heatMap.getContainer().querySelector('.coordinate-control');
+      div.innerHTML = `Lat: ${e.latlng.lat.toFixed(6)}, Lng: ${e.latlng.lng.toFixed(6)}`;
+    });
 
     let heatLayer = L.heatLayer([], {
       radius: 50,
