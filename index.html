@@ -15,10 +15,11 @@
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding: 1.5rem; background: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
     .controls { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; align-items: center; background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
     .controls label { font-size: 1rem; font-weight: 500; color: #4a5568; }
-    .controls input { padding: 0.75rem; font-size: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; width: 140px; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
-    .controls input:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
+    .controls input[type="number"], .controls input[type="date"], .controls input[type="time"] { padding: 0.75rem; font-size: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; width: 140px; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .controls input[type="number"]:focus, .controls input[type="date"]:focus, .controls input[type="time"]:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
     .controls button { background: #3182ce; color: #ffffff; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.3s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
     .controls button:hover { background: #2b6cb0; }
+    .controls input[type="checkbox"] { margin-right: 0.5rem; }
     .chart-container { background: #ffffff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
     #circle-map, #heat-map { height: 600px; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; position: relative; }
     .map-container { position: relative; margin: 0 40px 2rem 40px; }
@@ -57,6 +58,10 @@
     .detector-light { fill: #edf2f7; transition: fill 0.3s ease; }
     .footer { text-align: center; font-size: 0.875rem; color: #718096; padding: 1rem 0; margin-top: auto; }
     .coordinate-control { background: #ffffff; padding: 0.5rem; border-radius: 0.25rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); font-size: 0.875rem; color: #2d3748; }
+    .stats { font-size: 0.875rem; color: #4a5568; text-align: center; margin-top: 1rem; }
+    .annotation-legend { font-size: 0.875rem; color: #4a5568; text-align: center; margin-top: 0.5rem; }
+    .annotation-legend-item { display: flex; align-items: center; justify-content: center; margin-bottom: 0.25rem; }
+    .annotation-legend-symbol { width: 12px; height: 12px; margin-right: 0.5rem; }
   </style>
 </head>
 <body>
@@ -107,12 +112,19 @@
       <input type="number" id="circle-min-value" step="0.1" value="0" class="focus:ring focus:ring-blue-200" oninput="updateCircleRange(this.value, document.getElementById('circle-max-value').value, true)"/>
       <label for="circle-max-value" class="font-medium">Max Value (µSv/h):</label>
       <input type="number" id="circle-max-value" step="0.1" value="10" class="focus:ring focus:ring-blue-200" oninput="updateCircleRange(document.getElementById('circle-min-value').value, this.value, true)"/>
+      <label><input type="checkbox" id="show-circle-index" checked>Show Location Index</label>
       <button onclick="searchCircleData()">Search Time Range</button>
       <button onclick="updateCircleMap()">Update Data</button>
     </div>
 
     <div class="chart-container">
       <canvas id="circle-radiationChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="radiationLocationChart"></canvas>
+      <div class="stats" id="circle-stats"></div>
+      <div class="annotation-legend" id="circle-annotation-legend"></div>
     </div>
 
     <h2>Radiation Mapping Dashboard (Circle Markers)</h2>
@@ -137,12 +149,19 @@
       <input type="number" id="heat-min-value" step="0.1" value="0" class="focus:ring focus:ring-blue-200" oninput="updateHeatRange(this.value, document.getElementById('heat-max-value').value, true)"/>
       <label for="heat-max-value" class="font-medium">Max Value (µSv/h):</label>
       <input type="number" id="heat-max-value" step="0.1" value="10" class="focus:ring focus:ring-blue-200" oninput="updateHeatRange(document.getElementById('heat-min-value').value, this.value, true)"/>
+      <label><input type="checkbox" id="show-heat-index" checked>Show Location Index</label>
       <button onclick="searchHeatData()">Search Time Range</button>
       <button onclick="updateHeatMap()">Update Data</button>
     </div>
 
     <div class="chart-container">
       <canvas id="heat-radiationChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="radiationLocationChartHeat"></canvas>
+      <div class="stats" id="heat-stats"></div>
+      <div class="annotation-legend" id="heat-annotation-legend"></div>
     </div>
 
     <h2>Radiation Heatmap Dashboard</h2>
@@ -161,6 +180,7 @@
   <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0/dist/chartjs-plugin-annotation.min.js"></script>
   <script>
     // Global array to store heatmap data points
     let heatDataPoints = [];
@@ -239,7 +259,7 @@
         ctx.setLineDash([2, 4]);
 
         // Draw latitude lines (vertical) and labels on top
-        ctx.font = '14px Roboto';
+        ctx.font = '7px Roboto';
         ctx.fillStyle = '#2d3748';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
@@ -321,6 +341,7 @@
     let circleIsInitialLoad = true;
     let circleMinValue = 0;
     let circleMaxValue = 10;
+    let showCircleIndex = true;
 
     const circleLegend = L.control({position: 'bottomright'});
     circleLegend.onAdd = function () {
@@ -426,6 +447,69 @@
       }
     });
 
+    const circleLocationCtx = document.getElementById('radiationLocationChart').getContext('2d');
+    const radiationLocationChart = new Chart(circleLocationCtx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Radiation Level (µSv/h)',
+          data: [],
+          backgroundColor: '#3182ce',
+          borderColor: '#2b6cb0',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Radiation Level vs Location Index (Circle Map)',
+            font: { size: 20, family: 'Roboto' },
+            padding: { top: 10, bottom: 20 }
+          },
+          annotation: {
+            annotations: {
+              meanLine: {
+                type: 'line',
+                yMin: 0,
+                yMax: 0,
+                borderColor: 'red',
+                borderWidth: 2,
+                label: {
+                  enabled: true,
+                  content: 'Mean',
+                  position: 'end'
+                }
+              },
+              medianLine: {
+                type: 'line',
+                yMin: 0,
+                yMax: 0,
+                borderColor: 'green',
+                borderWidth: 2,
+                label: {
+                  enabled: true,
+                  content: 'Median',
+                  position: 'end'
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Location Index', font: { family: 'Roboto' } }
+          },
+          y: {
+            title: { display: true, text: 'Radiation Level (µSv/h)', font: { family: 'Roboto' } },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
     // Heatmap Setup
     const heatMap = L.map('heat-map', {
       renderer: L.canvas(),
@@ -469,6 +553,7 @@
     let heatIsInitialLoad = true;
     let heatMinValue = 0;
     let heatMaxValue = 10;
+    let showHeatIndex = true;
 
     // Updated Heatmap Click Handler with IDW and 70-meter limit
     heatMap.on('click', function(e) {
@@ -609,6 +694,100 @@
       }
     });
 
+    const heatLocationCtx = document.getElementById('radiationLocationChartHeat').getContext('2d');
+    const radiationLocationChartHeat = new Chart(heatLocationCtx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Radiation Level (µSv/h)',
+          data: [],
+          backgroundColor: '#3182ce',
+          borderColor: '#2b6cb0',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Radiation Level vs Location Index (Heatmap)',
+            font: { size: 20, family: 'Roboto' },
+            padding: { top: 10, bottom: 20 }
+          },
+          annotation: {
+            annotations: {
+              meanLine: {
+                type: 'line',
+                yMin: 0,
+                yMax: 0,
+                borderColor: 'red',
+                borderWidth: 2,
+                label: {
+                  enabled: true,
+                  content: 'Mean',
+                  position: 'end'
+                }
+              },
+              medianLine: {
+                type: 'line',
+                yMin: 0,
+                yMax: 0,
+                borderColor: 'green',
+                borderWidth: 2,
+                label: {
+                  enabled: true,
+                  content: 'Median',
+                  position: 'end'
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Location Index', font: { family: 'Roboto' } }
+          },
+          y: {
+            title: { display: true, text: 'Radiation Level (µSv/h)', font: { family: 'Roboto' } },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Calculate mode
+    function calculateMode(arr) {
+      const frequency = {};
+      let maxFreq = 0;
+      let modes = [];
+
+      arr.forEach(num => {
+        frequency[num] = (frequency[num] || 0) + 1;
+        if (frequency[num] > maxFreq) {
+          maxFreq = frequency[num];
+          modes = [num];
+        } else if (frequency[num] === maxFreq) {
+          modes.push(num);
+        }
+      });
+
+      return modes.length > 1 ? modes : [modes[0]];
+    }
+
+    function getStatistics(values) {
+      const validValues = values.filter(v => !isNaN(v));
+      if (validValues.length === 0) return { mean: 0, median: 0, mode: [0] };
+
+      const mean = validValues.reduce((a, b) => a + b, 0) / validValues.length;
+      const sorted = [...validValues].sort((a, b) => a - b);
+      const median = sorted.length % 2 === 0 ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 : sorted[Math.floor(sorted.length / 2)];
+      const mode = calculateMode(validValues);
+
+      return { mean, median, mode };
+    }
+
     function getColor(value, minVal, maxVal) {
       if (value < 1) return '#3b82f6';  // Blue (0 to 1)
       if (value < 2) return '#22c55e';  // Green (1 to 2)
@@ -722,6 +901,7 @@
       document.getElementById('detector-light').setAttribute('fill', '#ef4444');
       circleMinValue = minVal;
       circleMaxValue = maxVal;
+      showCircleIndex = document.getElementById('show-circle-index').checked;
 
       const channelId = '2967420';
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
@@ -734,13 +914,14 @@
 
           const times = [];
           const values = [];
+          const locationValues = [];
           let sumLat = 0, sumLon = 0, count = 0;
           circleLatestValidFeed = null;
 
           const startTimeObj = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
           const endTimeObj = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
 
-          data.feeds.forEach(feed => {
+          data.feeds.forEach((feed, index) => {
             const feedTime = new Date(feed.created_at);
             if ((startTimeObj && feedTime < startTimeObj) || (endTimeObj && feedTime > endTimeObj)) {
               return; // Skip if outside time range
@@ -755,8 +936,10 @@
               if (!isNaN(val) && val >= minVal && val <= maxVal) {
                 times.push(time);
                 values.push(val);
+                locationValues.push({ x: index, y: val });
               }
 
+              const popupContent = `Radiation: ${val} µSv/h<br>Time: ${time}` + (showCircleIndex ? `<br>Index: ${index}` : '');
               L.circleMarker([lat, lon], {
                 radius: 6,
                 fillColor: getColor(val, minVal, maxVal),
@@ -764,7 +947,7 @@
                 weight: 1,
                 opacity: 1,
                 fillOpacity: 0.8
-              }).addTo(circleMarkers).bindPopup(`Radiation: ${val} µSv/h<br>Time: ${time}`);
+              }).addTo(circleMarkers).bindPopup(popupContent);
 
               sumLat += lat;
               sumLon += lon;
@@ -785,6 +968,24 @@
           circleRadiationChart.data.datasets[0].data = values;
           circleRadiationChart.update();
 
+          radiationLocationChart.data.labels = locationValues.map(d => d.x);
+          radiationLocationChart.data.datasets[0].data = locationValues.map(d => d.y);
+          const stats = getStatistics(values);
+          document.getElementById('circle-stats').innerHTML = `
+            Mean: ${stats.mean.toFixed(3)} µSv/h<br>
+            Median: ${stats.median.toFixed(3)} µSv/h<br>
+            Mode: ${stats.mode.join(', ')} µSv/h
+          `;
+          radiationLocationChart.options.plugins.annotation.annotations.meanLine.yMin = stats.mean;
+          radiationLocationChart.options.plugins.annotation.annotations.meanLine.yMax = stats.mean;
+          radiationLocationChart.options.plugins.annotation.annotations.medianLine.yMin = stats.median;
+          radiationLocationChart.options.plugins.annotation.annotations.medianLine.yMax = stats.median;
+          document.getElementById('circle-annotation-legend').innerHTML = `
+            <div class="annotation-legend-item"><div class="annotation-legend-symbol" style="background-color: red;"></div>Mean</div>
+            <div class="annotation-legend-item"><div class="annotation-legend-symbol" style="background-color: green;"></div>Median</div>
+          `;
+          radiationLocationChart.update();
+
           updateLegend(minVal, maxVal, true);
 
           if ((circleIsInitialLoad || resetView) && count > 0) {
@@ -802,6 +1003,7 @@
     function fetchHeatData(limit, startDate, startTime, endDate, endTime, minVal, maxVal, resetView = false) {
       heatMinValue = minVal;
       heatMaxValue = maxVal;
+      showHeatIndex = document.getElementById('show-heat-index').checked;
 
       const channelId = '2967420';
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=${limit}`;
@@ -813,6 +1015,7 @@
           const locationMaxVals = {};
           const times = [];
           const values = [];
+          const locationValues = [];
           let sumLat = 0, sumLon = 0, count = 0;
           heatLatestValidFeed = null;
           heatDataPoints = []; // Clear previous data points
@@ -820,7 +1023,7 @@
           const startTimeObj = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
           const endTimeObj = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
 
-          data.feeds.forEach(feed => {
+          data.feeds.forEach((feed, index) => {
             const feedTime = new Date(feed.created_at);
             if ((startTimeObj && feedTime < startTimeObj) || (endTimeObj && feedTime > endTimeObj)) {
               return; // Skip if outside time range
@@ -859,6 +1062,7 @@
                 });
                 times.push(time);
                 values.push(val);
+                locationValues.push({ x: index, y: val });
               }
 
               sumLat += lat;
@@ -884,6 +1088,24 @@
           heatRadiationChart.data.labels = times;
           heatRadiationChart.data.datasets[0].data = values;
           heatRadiationChart.update();
+
+          radiationLocationChartHeat.data.labels = locationValues.map(d => d.x);
+          radiationLocationChartHeat.data.datasets[0].data = locationValues.map(d => d.y);
+          const stats = getStatistics(values);
+          document.getElementById('heat-stats').innerHTML = `
+            Mean: ${stats.mean.toFixed(3)} µSv/h<br>
+            Median: ${stats.median.toFixed(3)} µSv/h<br>
+            Mode: ${stats.mode.join(', ')} µSv/h
+          `;
+          radiationLocationChartHeat.options.plugins.annotation.annotations.meanLine.yMin = stats.mean;
+          radiationLocationChartHeat.options.plugins.annotation.annotations.meanLine.yMax = stats.mean;
+          radiationLocationChartHeat.options.plugins.annotation.annotations.medianLine.yMin = stats.median;
+          radiationLocationChartHeat.options.plugins.annotation.annotations.medianLine.yMax = stats.median;
+          document.getElementById('heat-annotation-legend').innerHTML = `
+            <div class="annotation-legend-item"><div class="annotation-legend-symbol" style="background-color: red;"></div>Mean</div>
+            <div class="annotation-legend-item"><div class="annotation-legend-symbol" style="background-color: green;"></div>Median</div>
+          `;
+          radiationLocationChartHeat.update();
 
           updateLegend(minVal, maxVal, false);
 
@@ -980,6 +1202,16 @@
       }
       fetchHeatData(val, null, null, null, null, minVal, maxVal, true);
     }
+
+    document.getElementById('show-circle-index').addEventListener('change', () => {
+      showCircleIndex = document.getElementById('show-circle-index').checked;
+      fetchCircleData(document.getElementById('circle-points').value, null, null, null, null, circleMinValue, circleMaxValue, false);
+    });
+
+    document.getElementById('show-heat-index').addEventListener('change', () => {
+      showHeatIndex = document.getElementById('show-heat-index').checked;
+      fetchHeatData(document.getElementById('heat-points').value, null, null, null, null, heatMinValue, heatMaxValue, false);
+    });
 
     fetchCircleData(8000, null, null, null, null, 0, 10, true);
     fetchHeatData(8000, null, null, null, null, 0, 10, true);
